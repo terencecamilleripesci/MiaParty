@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mia's Album 🎀</title>
+<link rel="icon" href="assets/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Baloo 2',system-ui;background:#FFF5F9;color:#7A1B4C;margin:0;padding:18px;text-align:center}
+h1{color:#BE185D;margin:10px 0 4px}
+input{padding:14px;border-radius:14px;border:2.5px solid #F9A8D4;font:700 1.3rem 'Baloo 2';text-align:center;width:140px;letter-spacing:.3em}
+button{padding:13px 26px;border-radius:999px;border:none;background:linear-gradient(135deg,#EC4899,#BE185D);color:#fff;font:800 1rem 'Baloo 2';cursor:pointer;margin:10px 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:18px}
+.grid a{display:block;aspect-ratio:1;border-radius:14px;overflow:hidden;background:#FBCFE8}
+.grid img{width:100%;height:100%;object-fit:cover}
+.meta{font-size:.8rem;color:#B94A85;font-weight:700}
+#gal{display:none}
+</style>
+</head>
+<body>
+<h1>🎀 Mia's Album</h1>
+<div id="lock">
+  <p class="meta">Mummy's eyes only — enter the PIN</p>
+  <input id="pin" inputmode="numeric" maxlength="4" placeholder="••••">
+  <br><button onclick="open_()">OPEN ALBUM</button>
+</div>
+<div id="gal">
+  <p class="meta"><span id="count">0</span> photos from Mia's photographers</p>
+  <button onclick="dl()">⬇️ DOWNLOAD ALL (ZIP)</button>
+  <button onclick="load()">🔄 Refresh</button>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+const API='https://raspberrypi.silverside-tench.ts.net:8443';
+let PIN='';
+function open_(){ PIN=document.getElementById('pin').value; load(); }
+async function load(){
+  try{
+    const r=await fetch(API+'/list?pin='+PIN);
+    if(!r.ok){ alert('Wrong PIN'); return; }
+    const d=await r.json();
+    document.getElementById('lock').style.display='none';
+    document.getElementById('gal').style.display='block';
+    document.getElementById('count').textContent=d.count;
+    document.getElementById('grid').innerHTML=d.photos.map(p=>
+      `<a href="${API}/photos/${p.name}?pin=${PIN}" target="_blank"><img loading="lazy" src="${API}/photos/${p.name}?pin=${PIN}" alt=""></a>`).join('');
+  }catch(e){ alert('Album offline — try again shortly'); }
+}
+function dl(){ location.href=API+'/zip?pin='+PIN; }
+</script>
+</body>
+</html>

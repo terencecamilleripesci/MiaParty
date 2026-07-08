@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Mia's 1st Birthday 🎀 Party Camera</title>
+<meta name="description" content="Snap up to 50 photos at Mia's first birthday — every picture goes straight to mummy's album!">
+<meta name="theme-color" content="#F9A8D4">
+<link rel="icon" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{ --pink:#EC4899; --soft:#F9A8D4; --deep:#BE185D; --cream:#FFF5F9; }
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100dvh;overflow:hidden}
+body{font-family:'Baloo 2',system-ui,sans-serif;background:#FBCFE8;color:#7A1B4C;
+  -webkit-user-select:none;user-select:none;overscroll-behavior:none}
+.bg{position:fixed;inset:0;background:url('assets/bg.jpg') center/cover;opacity:.5}
+.scrim{position:fixed;inset:0;background:linear-gradient(180deg,rgba(255,245,249,.4),rgba(251,207,232,.75))}
+.app{position:relative;height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:calc(14px + env(safe-area-inset-top)) 18px calc(16px + env(safe-area-inset-bottom));text-align:center}
+.balloon{position:fixed;font-size:2.2rem;animation:floatUp linear infinite;pointer-events:none;z-index:1}
+@keyframes floatUp{0%{transform:translateY(110dvh) rotate(-6deg)}100%{transform:translateY(-20dvh) rotate(8deg)}}
+.mia{width:min(38vw,150px);height:min(38vw,150px);border-radius:50%;border:5px solid #fff;
+  box-shadow:0 12px 30px rgba(190,24,93,.35);object-fit:cover;margin-top:6px;z-index:2}
+h1{font-size:clamp(1.6rem,7vw,2.3rem);color:var(--deep);line-height:1.1;margin-top:10px;z-index:2}
+h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
+.film{z-index:2;margin:14px 0 6px;background:#fff;border:3px solid var(--soft);border-radius:999px;
+  padding:10px 22px;font-weight:800;font-size:1.05rem;color:var(--deep);box-shadow:0 6px 16px rgba(190,24,93,.2)}
+.film b{font-size:1.3em}
+.snap{z-index:2;margin-top:12px;width:min(52vw,210px);height:min(52vw,210px);border-radius:50%;border:none;cursor:pointer;
+  background:radial-gradient(circle at 35% 30%, #FF7DB4, var(--pink) 60%, var(--deep));
+  box-shadow:0 16px 40px rgba(190,24,93,.45), inset 0 4px 12px rgba(255,255,255,.5);
+  color:#fff;font-family:inherit;font-weight:800;font-size:1.2rem;letter-spacing:.03em;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  transition:transform .12s}
+.snap:active{transform:scale(.93)}
+.snap svg{width:52px;height:52px}
+.snap.done{background:radial-gradient(circle,#c9c*, #999);filter:grayscale(.7);opacity:.8}
+.hintt{z-index:2;font-size:.86rem;color:#A8548A;font-weight:700;margin-top:12px;max-width:30ch}
+.count-pop{position:fixed;left:50%;top:40%;transform:translateX(-50%);z-index:50;pointer-events:none;
+  font-weight:800;font-size:3rem;color:#fff;text-shadow:0 4px 18px rgba(190,24,93,.8);opacity:0}
+.count-pop.go{animation:pop 1s ease-out}
+@keyframes pop{0%{opacity:0;transform:translateX(-50%) scale(.6)}25%{opacity:1;transform:translateX(-50%) scale(1.15)}
+  60%{transform:translateX(-50%) scale(1)}100%{opacity:0;transform:translateX(-50%) translateY(-40px)}}
+.status{z-index:2;position:fixed;bottom:calc(14px + env(safe-area-inset-bottom));left:0;right:0;
+  font-size:.78rem;font-weight:700;color:#B94A85}
+.name-modal{position:fixed;inset:0;background:rgba(122,27,76,.55);z-index:60;display:flex;align-items:center;justify-content:center;padding:24px}
+.name-card{background:#fff;border-radius:26px;padding:28px 22px;max-width:340px;width:100%;text-align:center;
+  box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.name-card h2{color:var(--deep);font-size:1.4rem;margin-bottom:6px}
+.name-card p{font-size:.9rem;color:#A8548A;font-weight:600;margin-bottom:16px}
+.name-card input{width:100%;padding:14px;border-radius:14px;border:2.5px solid var(--soft);font:700 1.1rem 'Baloo 2';
+  text-align:center;color:var(--deep);outline:none}
+.name-card input:focus{border-color:var(--pink)}
+.name-card button{margin-top:14px;width:100%;padding:15px;border-radius:999px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--pink),var(--deep));color:#fff;font:800 1.1rem 'Baloo 2'}
+.confetti{position:fixed;top:-12px;z-index:45;font-size:1.3rem;animation:cf linear forwards;pointer-events:none}
+@keyframes cf{to{transform:translateY(110dvh) rotate(720deg)}}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="scrim"></div>
+
+<div class="app">
+  <img class="mia" src="assets/mia.jpg" alt="Mia">
+  <h1>Mia's 1<sup>st</sup> Birthday <small>🎀 Grazzi talli ġejt! · Be Mia's photographer 📸</small></h1>
+  <div class="film">🎞️ <b id="left">50</b> photos left</div>
+  <button class="snap" id="snap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    TAP TO SNAP
+  </button>
+  <div class="hintt">Every photo flies straight to Mia's album — snap the cake, the guests, the chaos! 🎈</div>
+  <input type="file" id="cam" accept="image/*" capture="environment" style="display:none">
+  <div class="status" id="status"></div>
+</div>
+
+<div class="count-pop" id="pop">📸</div>
+
+<div class="name-modal" id="nameModal">
+  <div class="name-card">
+    <h2>🎀 Merħba to Mia's party!</h2>
+    <p>You're one of Mia's photographers today — you have <b>50 shots</b>. What's your name?</p>
+    <input id="guestName" maxlength="20" placeholder="Your name" autocomplete="name">
+    <button id="startBtn">START SNAPPING 📸</button>
+  </div>
+</div>
+
+<script>
+const API = 'https://raspberrypi.silverside-tench.ts.net:8443';
+const PARTY = 'mia2026', LIMIT = 50;
+const $ = id => document.getElementById(id);
+
+// floating balloons
+'🎈🎈🎈🩷🧸🎈'.match(/../gu).forEach((e, i) => {
+  const b = document.createElement('div');
+  b.className = 'balloon'; b.textContent = e;
+  b.style.left = (6 + i * 16) + '%';
+  b.style.animationDuration = (11 + i * 2.7) + 's';
+  b.style.animationDelay = (-i * 3.1) + 's';
+  document.body.appendChild(b);
+});
+
+let guest = localStorage.mia_guest || '';
+let used = +(localStorage.mia_used || 0);
+
+function refresh(){
+  $('left').textContent = Math.max(0, LIMIT - used);
+  if (used >= LIMIT){
+    $('snap').classList.add('done');
+    $('snap').innerHTML = '🎉<br>FILM FULL!<br><span style="font-size:.7em">grazzi ħafna!</span>';
+  }
+}
+if (guest) $('nameModal').style.display = 'none';
+refresh();
+
+$('startBtn').addEventListener('click', () => {
+  const n = $('guestName').value.trim();
+  if (!n){ $('guestName').focus(); return; }
+  guest = n; localStorage.mia_guest = n;
+  $('nameModal').style.display = 'none';
+});
+
+$('snap').addEventListener('click', () => {
+  if (used >= LIMIT) return;
+  $('cam').click();
+});
+
+$('cam').addEventListener('change', async e => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  used++; localStorage.mia_used = used; refresh();
+  confetti(); popShot();
+  const jpeg = await compress(file);
+  queueUpload(jpeg);
+});
+
+function popShot(){
+  const p = $('pop');
+  p.textContent = ['📸','🎀','🎂','🥳','💖'][used % 5] + ' ' + used + '/' + LIMIT;
+  p.classList.remove('go'); void p.offsetWidth; p.classList.add('go');
+  if (navigator.vibrate) try{ navigator.vibrate(25); }catch(_){}
+}
+function confetti(){
+  for (let i = 0; i < 18; i++){
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = ['🎀','💗','✨','🎈'][i % 4];
+    c.style.left = Math.random() * 100 + '%';
+    c.style.animationDuration = (1.2 + Math.random() * 1.4) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+async function compress(file){
+  const img = await createImageBitmap(file).catch(() => null);
+  if (!img){ return file; }
+  const MAX = 1800;
+  const k = Math.min(1, MAX / Math.max(img.width, img.height));
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+  cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.82));
+  return blob || file;
+}
+
+/* ---- resilient upload queue (IndexedDB): party wifi can cough, photos can't be lost ---- */
+let db;
+const dbReady = new Promise(res => {
+  const rq = indexedDB.open('miaQ', 1);
+  rq.onupgradeneeded = () => rq.result.createObjectStore('q', { autoIncrement: true });
+  rq.onsuccess = () => { db = rq.result; res(); };
+  rq.onerror = () => res();
+});
+async function queueUpload(blob){
+  await dbReady;
+  if (db){
+    const tx = db.transaction('q', 'readwrite');
+    tx.objectStore('q').add(blob);
+  }
+  pump();
+}
+let pumping = false;
+async function pump(){
+  if (pumping) return; pumping = true;
+  await dbReady;
+  try{
+    while (db){
+      const tx = db.transaction('q', 'readonly');
+      const getReq = tx.objectStore('q').openCursor();
+      const item = await new Promise(r => { getReq.onsuccess = () => r(getReq.result); getReq.onerror = () => r(null); });
+      if (!item) break;
+      const ok = await send(item.value);
+      if (!ok){ setStatus('📶 saving photos… will retry'); break; }
+      const dx = db.transaction('q', 'readwrite');
+      dx.objectStore('q').delete(item.key);
+      await new Promise(r => { dx.oncomplete = r; dx.onerror = r; });
+      setStatus('💖 photo delivered to Mia\'s album!');
+    }
+  } finally { pumping = false; }
+}
+async function send(blob){
+  try{
+    const r = await fetch(API + '/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'image/jpeg', 'X-Guest': guest || 'guest', 'X-Party': PARTY },
+      body: blob
+    });
+    return r.ok;
+  }catch(_){ return false; }
+}
+let stT;
+function setStatus(s){ $('status').textContent = s; clearTimeout(stT); stT = setTimeout(() => $('status').textContent = '', 4000); }
+setInterval(pump, 20000);
+addEventListener('online', pump);
+pump();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
