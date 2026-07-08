@@ -37,6 +37,24 @@ button{padding:13px 26px;border-radius:999px;border:none;background:linear-gradi
   <button onclick="dl()">⬇️ DOWNLOAD ALL (ZIP)</button>
   <button onclick="load()">🔄 Refresh</button>
   <div class="grid" id="grid"></div>
+  <div id="selbar" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#BE185D;color:#fff;
+    padding:12px;z-index:50;font-weight:800">
+    <span id="selN">0</span> selected
+    <button onclick="dlSel()" style="background:#fff;color:#BE185D">⬇️ DOWNLOAD SELECTED</button>
+    <button onclick="clearSel()" style="background:rgba(255,255,255,.25);color:#fff">Clear</button>
+  </div>
+  <div id="lb" style="display:none;position:fixed;inset:0;background:rgba(30,5,18,.95);z-index:60;
+    flex-direction:column;align-items:center;justify-content:center;padding:16px">
+    <img id="lbImg" style="max-width:96vw;max-height:74vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+    <div id="lbName" style="color:#F9A8D4;font-weight:700;margin:10px 0 4px;font-size:.85rem"></div>
+    <div>
+      <button onclick="lbNav(-1)">‹ Prev</button>
+      <button onclick="dlOne(lbList[lbIdx].name)" style="background:#fff;color:#BE185D">⬇️ Download</button>
+      <button onclick="lbSel()" id="lbSelBtn">☑️ Select</button>
+      <button onclick="lbNav(1)">Next ›</button>
+    </div>
+    <button onclick="lbClose()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.2);color:#fff">✕</button>
+  </div>
 </div>
 <script>
 const API='https://raspberrypi.silverside-tench.ts.net:8443';
@@ -52,6 +70,7 @@ async function load(){
     document.getElementById('count').textContent=d.count;
     const by={};
     d.photos.forEach(p=>{ const g=p.name.split('_')[0]||'guest'; (by[g]=by[g]||[]).push(p); });
+    groups=by;
     document.getElementById('grid').innerHTML = Object.keys(by).sort().map(g=>`
       <div class="guest">
         <div class="ghead">
@@ -59,14 +78,52 @@ async function load(){
           <button class="mini" onclick="dlGuest('${g}')">⬇️ ${g}'s zip</button>
         </div>
         <div class="ggrid">${by[g].map(p=>`
-          <div class="ph">
-            <a href="${API}/photos/${p.name}?pin=${PIN}" target="_blank"><img loading="lazy" src="${API}/photos/${p.name}?pin=${PIN}" alt=""></a>
+          <div class="ph" data-name="${p.name}">
+            <a href="javascript:void(0)" onclick="lbOpen('${g}','${p.name}')"><img loading="lazy" src="${API}/photos/${p.name}?pin=${PIN}" alt=""></a>
+            <input type="checkbox" class="pick" onchange="selChange()" data-name="${p.name}"
+              style="position:absolute;top:6px;left:6px;width:22px;height:22px;accent-color:#EC4899">
             <button class="dl1" onclick="dlOne('${p.name}')">⬇️</button>
           </div>`).join('')}</div>
       </div>`).join('');
   }catch(e){ alert('Album offline — try again shortly'); }
 }
 function dlGuest(g){ location.href=API+'/zip?pin='+PIN+'&guest='+encodeURIComponent(g); }
+let groups={};
+function selChange(){
+  const n=document.querySelectorAll('.pick:checked').length;
+  document.getElementById('selN').textContent=n;
+  document.getElementById('selbar').style.display=n?'block':'none';
+}
+function clearSel(){ document.querySelectorAll('.pick:checked').forEach(c=>c.checked=false); selChange(); }
+async function dlSel(){
+  const names=[...document.querySelectorAll('.pick:checked')].map(c=>c.dataset.name);
+  if(!names.length) return;
+  const r=await fetch(API+'/zipsel?pin='+PIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({names})});
+  if(!r.ok){ alert('Download failed'); return; }
+  const b=await r.blob();
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download='mia-selected.zip'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),8000);
+}
+let lbList=[], lbIdx=0;
+function lbOpen(g,name){
+  lbList=groups[g]||[]; lbIdx=lbList.findIndex(p=>p.name===name);
+  lbShow();
+  document.getElementById('lb').style.display='flex';
+}
+function lbShow(){
+  const p=lbList[lbIdx]; if(!p) return;
+  document.getElementById('lbImg').src=API+'/photos/'+p.name+'?pin='+PIN;
+  document.getElementById('lbName').textContent=(lbIdx+1)+' / '+lbList.length+' · '+p.name.split('_')[0];
+  const cb=document.querySelector('.pick[data-name="'+p.name+'"]');
+  document.getElementById('lbSelBtn').textContent=(cb&&cb.checked)?'✅ Selected':'☑️ Select';
+}
+function lbNav(d){ lbIdx=(lbIdx+d+lbList.length)%lbList.length; lbShow(); }
+function lbSel(){
+  const p=lbList[lbIdx]; const cb=document.querySelector('.pick[data-name="'+p.name+'"]');
+  if(cb){ cb.checked=!cb.checked; selChange(); lbShow(); }
+}
+function lbClose(){ document.getElementById('lb').style.display='none'; }
 async function dlOne(name){
   try{
     const r=await fetch(API+'/photos/'+name+'?pin='+PIN);

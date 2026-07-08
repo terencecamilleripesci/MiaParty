@@ -35,6 +35,30 @@ class H(http.server.BaseHTTPRequestHandler):
         return ('pin=' + PIN) in (self.path.split('?', 1) + [''])[1]
 
     def do_POST(self):
+        if self.path.split('?', 1)[0] == '/zipsel':
+            if not self._pin_ok():
+                return self._deny(403, 'pin')
+            n = int(self.headers.get('Content-Length', 0))
+            if not (0 < n <= 200000):
+                return self._deny(413, 'too big')
+            try:
+                names = json.loads(self.rfile.read(n)).get('names', [])[:2000]
+            except Exception:
+                return self._deny(400, 'bad json')
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, 'w', zipfile.ZIP_STORED) as z:
+                for f in names:
+                    f = re.sub(r'[^A-Za-z0-9_.-]', '', str(f))
+                    fp = os.path.join(PHOTOS, f)
+                    if f.endswith('.jpg') and os.path.isfile(fp):
+                        z.write(fp, f)
+            b = buf.getvalue()
+            self.send_response(200); self._cors()
+            self.send_header('Content-Type', 'application/zip')
+            self.send_header('Content-Disposition', 'attachment; filename="mia-selected.zip"')
+            self.send_header('Content-Length', str(len(b)))
+            self.end_headers()
+            self.wfile.write(b); return
         if self.path != '/upload':
             return self._deny(404, 'not found')
         if self.headers.get('X-Party') != PARTY:
