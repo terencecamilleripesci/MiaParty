@@ -59,6 +59,20 @@ class H(http.server.BaseHTTPRequestHandler):
             self.send_header('Content-Length', str(len(b)))
             self.end_headers()
             self.wfile.write(b); return
+        if self.path.split('?', 1)[0] == '/subscribe':
+            n = int(self.headers.get('Content-Length', 0))
+            if not (0 < n <= 8000):
+                return self._deny(413, 'too big')
+            try:
+                sub = json.loads(self.rfile.read(n))
+                assert 'endpoint' in sub
+            except Exception:
+                return self._deny(400, 'bad sub')
+            with open(os.path.join(BASE, 'subs.jsonl'), 'a') as f:
+                f.write(json.dumps(sub) + '\n')
+            self.send_response(200); self._cors()
+            self.send_header('Content-Type', 'application/json'); self.end_headers()
+            self.wfile.write(b'{"ok": true}'); return
         if self.path != '/upload':
             return self._deny(404, 'not found')
         if self.headers.get('X-Party') != PARTY:
@@ -82,6 +96,12 @@ class H(http.server.BaseHTTPRequestHandler):
         if path == '/health':
             self.send_response(200); self._cors(); self.end_headers()
             self.wfile.write(b'ok'); return
+        if path == '/vapid':
+            with open(os.path.join(BASE, 'keys', 'public_key.txt')) as f:
+                k = f.read().strip()
+            self.send_response(200); self._cors()
+            self.send_header('Content-Type', 'application/json'); self.end_headers()
+            self.wfile.write(json.dumps({'key': k}).encode()); return
         if not self._pin_ok():
             return self._deny(403, 'pin')
         if path == '/list':
