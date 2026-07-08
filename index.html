@@ -135,7 +135,7 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
 <script>
 const API = 'https://raspberrypi.silverside-tench.ts.net:8443';
 const PARTY = 'mia2026', LIMIT = 50;
-const PARTY_DAY = new Date('2026-08-12T00:00:00+02:00');   // camera unlocks on Mia's big day (Malta time)
+const PARTY_DAY = new Date('2026-08-13T00:00:00+02:00');   // Mia's birthday — camera unlocks (Malta time)
 const isTester = () => (guest || '').trim().toLowerCase() === 'test';
 const isOpen = () => isTester() || Date.now() >= PARTY_DAY.getTime();
 const $ = id => document.getElementById(id);
@@ -172,7 +172,7 @@ function refresh(){
     $('snap').classList.add('done');
     const ms = PARTY_DAY.getTime() - Date.now();
     const d2 = Math.floor(ms / 86400000), h2 = Math.floor(ms % 86400000 / 3600000);
-    $('snap').innerHTML = '🎂<br>OPENS 12 AUG<br><span style="font-size:.62em">' + d2 + ' days ' + h2 + 'h to go! 🎈</span>';
+    $('snap').innerHTML = '🎂<br>OPENS 13 AUG<br><span style="font-size:.62em">' + d2 + ' days ' + h2 + 'h to go! 🎈</span>';
     return;
   }
   $('snap').classList.remove('done');
@@ -204,7 +204,7 @@ $('startBtn').addEventListener('click', () => {
 });
 
 $('snap').addEventListener('click', () => {
-  if (!isOpen()){ setStatus('🎂 The camera opens on 12 August — Mia\'s big day!'); return; }
+  if (!isOpen()){ setStatus('🎂 The camera opens on 13 August — Mia\'s big day!'); return; }
   if (!guest){ $('nameModal').style.display = 'flex'; return; }   // ask the name only when it's photo time
   if (used >= LIMIT) return;
   $('cam').click();
