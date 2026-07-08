@@ -32,8 +32,12 @@ body{font-family:'Baloo 2',system-ui,sans-serif;background:#FBCFE8;color:#7A1B4C
   padding:calc(14px + env(safe-area-inset-top)) 18px calc(16px + env(safe-area-inset-bottom));text-align:center}
 .balloon{position:fixed;font-size:2.2rem;animation:floatUp linear infinite;pointer-events:none;z-index:1}
 @keyframes floatUp{0%{transform:translateY(110dvh) rotate(-6deg)}100%{transform:translateY(-20dvh) rotate(8deg)}}
-.mia{width:min(38vw,150px);height:min(38vw,150px);border-radius:50%;border:5px solid #fff;
-  box-shadow:0 12px 30px rgba(190,24,93,.35);object-fit:cover;margin-top:6px;z-index:2}
+.mia{width:min(44vw,175px);height:min(44vw,175px);border-radius:50%;border:5px solid #fff;
+  box-shadow:0 12px 30px rgba(190,24,93,.35);margin-top:6px;z-index:2;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;
+  transition:opacity 1.1s ease;transform:scale(1);animation:kb 7s ease-in-out infinite alternate}
+.slide.on{opacity:1}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.09)}}
 h1{font-size:clamp(1.6rem,7vw,2.3rem);color:var(--deep);line-height:1.1;margin-top:10px;z-index:2}
 h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
 .film{z-index:2;margin:14px 0 6px;background:#fff;border:3px solid var(--soft);border-radius:999px;
@@ -84,7 +88,10 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
 <div class="bg"></div><div class="scrim"></div>
 
 <div class="app">
-  <img class="mia" src="assets/mia.jpg" alt="Mia">
+  <div class="mia miawrap">
+    <img id="slideA" src="assets/slides/s01.jpg" alt="Mia" class="slide on">
+    <img id="slideB" src="assets/slides/s02.jpg" alt="" class="slide">
+  </div>
   <h1>Mia's 1<sup>st</sup> Birthday <small>🎀 Grazzi talli ġejt! · Be Mia's photographer 📸</small></h1>
   <div class="film">🎞️ <b id="left">50</b> photos left</div>
   <button class="snap" id="snap">
@@ -127,6 +134,19 @@ const PARTY_DAY = new Date('2026-08-12T00:00:00+02:00');   // camera unlocks on 
 const isTester = () => (guest || '').trim().toLowerCase() === 'test';
 const isOpen = () => isTester() || Date.now() >= PARTY_DAY.getTime();
 const $ = id => document.getElementById(id);
+
+/* ---- auto slideshow: crossfade through all of Mia's photos ---- */
+const SLIDES = Array.from({length:17}, (_,i) => 'assets/slides/s' + String(i+1).padStart(2,'0') + '.jpg');
+let si = 0, front = true;
+setInterval(() => {
+  si = (si + 1) % SLIDES.length;
+  const showEl = $(front ? 'slideB' : 'slideA');
+  const hideEl = $(front ? 'slideA' : 'slideB');
+  showEl.src = SLIDES[si];
+  const go = () => { showEl.classList.add('on'); hideEl.classList.remove('on'); front = !front; };
+  showEl.complete ? go() : showEl.onload = go;
+  const nxt = new Image(); nxt.src = SLIDES[(si + 1) % SLIDES.length];   // preload next
+}, 3500);
 
 // floating balloons
 '🎈🎈🎈🩷🧸🎈'.match(/../gu).forEach((e, i) => {
