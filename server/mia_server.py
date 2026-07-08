@@ -80,10 +80,15 @@ class H(http.server.BaseHTTPRequestHandler):
                 self.wfile.write(fh.read())
             return
         if path == '/zip':
+            q = (self.path.split('?', 1) + [''])[1]
+            guest = ''
+            for part in q.split('&'):
+                if part.startswith('guest='):
+                    guest = re.sub(r'[^A-Za-z0-9_-]', '', part[6:])
             buf = io.BytesIO()
             with zipfile.ZipFile(buf, 'w', zipfile.ZIP_STORED) as z:
                 for f in sorted(os.listdir(PHOTOS)):
-                    if f.endswith('.jpg'):
+                    if f.endswith('.jpg') and (not guest or f.startswith(guest + '_')):
                         z.write(os.path.join(PHOTOS, f), f)
             b = buf.getvalue()
             self.send_response(200); self._cors()
