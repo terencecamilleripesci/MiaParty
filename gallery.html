@@ -12,6 +12,8 @@ input{padding:14px;border-radius:14px;border:2.5px solid #F9A8D4;font:700 1.3rem
 button{padding:13px 26px;border-radius:999px;border:none;background:linear-gradient(135deg,#EC4899,#BE185D);color:#fff;font:800 1rem 'Baloo 2';cursor:pointer;margin:10px 6px}
 .grid{margin-top:14px;text-align:left}
 .guest{background:#fff;border:2px solid #FBCFE8;border-radius:18px;padding:14px;margin-bottom:16px}
+.gname{cursor:pointer;margin-bottom:10px;transition:transform .12s}
+.gname:active{transform:scale(.98)}
 .ghead{display:flex;justify-content:space-between;align-items:center;gap:10px;color:#BE185D;font-size:1.05rem}
 .mini{padding:8px 14px;margin:0;font-size:.8rem}
 .ggrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-top:10px}
@@ -71,24 +73,39 @@ async function load(){
     const by={};
     d.photos.forEach(p=>{ const g=p.name.split('_')[0]||'guest'; (by[g]=by[g]||[]).push(p); });
     groups=by;
-    document.getElementById('grid').innerHTML = Object.keys(by).sort().map(g=>`
-      <div class="guest">
-        <div class="ghead">
-          <span>📸 <b>${g}</b> · ${by[g].length} photo${by[g].length>1?'s':''}</span>
-          <button class="mini" onclick="dlGuest('${g}')">⬇️ ${g}'s zip</button>
-        </div>
-        <div class="ggrid">${by[g].map(p=>`
-          <div class="ph" data-name="${p.name}">
-            <a href="javascript:void(0)" onclick="lbOpen('${g}','${p.name}')"><img loading="lazy" src="${API}/photos/${p.name}?pin=${PIN}" alt=""></a>
-            <input type="checkbox" class="pick" onchange="selChange()" data-name="${p.name}"
-              style="position:absolute;top:6px;left:6px;width:22px;height:22px;accent-color:#EC4899">
-            <button class="dl1" onclick="dlOne('${p.name}')">⬇️</button>
-          </div>`).join('')}</div>
-      </div>`).join('');
+    renderList();
   }catch(e){ alert('Album offline — try again shortly'); }
 }
 function dlGuest(g){ location.href=API+'/zip?pin='+PIN+'&guest='+encodeURIComponent(g); }
 let groups={};
+/* names-first navigation: list of photographers -> tap a name -> their photos (with Back) */
+function renderList(){
+  clearSel();
+  const names=Object.keys(groups).sort();
+  document.getElementById('grid').innerHTML = names.length ? names.map(g=>`
+    <div class="guest gname" onclick="renderGuest('${g}')">
+      <div class="ghead">
+        <span>📸 <b>${g}</b> · ${groups[g].length} photo${groups[g].length>1?'s':''}</span>
+        <span style="font-size:1.4rem;color:#F9A8D4">›</span>
+      </div>
+    </div>`).join('') : '<p class="meta">No photos yet — the party hasn\'t started! 🎈</p>';
+}
+function renderGuest(g){
+  clearSel();
+  document.getElementById('grid').innerHTML = `
+    <div class="ghead" style="margin-bottom:12px">
+      <button class="mini" onclick="renderList()">‹ Back to names</button>
+      <span>📸 <b>${g}</b> · ${groups[g].length}</span>
+      <button class="mini" onclick="dlGuest('${g}')">⬇️ ${g}'s zip</button>
+    </div>
+    <div class="ggrid">${groups[g].map(p=>`
+      <div class="ph" data-name="${p.name}">
+        <a href="javascript:void(0)" onclick="lbOpen('${g}','${p.name}')"><img loading="lazy" src="${API}/photos/${p.name}?pin=${PIN}" alt=""></a>
+        <input type="checkbox" class="pick" onchange="selChange()" data-name="${p.name}"
+          style="position:absolute;top:6px;left:6px;width:22px;height:22px;accent-color:#EC4899">
+        <button class="dl1" onclick="dlOne('${p.name}')">⬇️</button>
+      </div>`).join('')}</div>`;
+}
 function selChange(){
   const n=document.querySelectorAll('.pick:checked').length;
   document.getElementById('selN').textContent=n;
