@@ -178,13 +178,13 @@ fetch('gal/slideshow.json?v='+Date.now()).then(r=>r.json()).then(list=>{
   SHOW = list || [];
   if(!SHOW.length) return;
   const a=$('slA'), b=$('slB');
-  a.src='gal/'+SHOW[0].f; $('by').textContent='📸 '+SHOW[0].who;
+  a.src=SHOW[0].f; $('by').textContent=(SHOW[0].mia?'🎀 ':'📸 ')+SHOW[0].who;
   setInterval(()=>{
     si=(si+1)%SHOW.length;
     const next = front ? b : a, cur = front ? a : b;
-    next.src='gal/'+SHOW[si].f;
+    next.src=SHOW[si].f;
     next.onload=()=>{ next.classList.add('on'); cur.classList.remove('on');
-                      $('by').textContent='📸 '+SHOW[si].who; front=!front; };
+                      $('by').textContent=(SHOW[si].mia?'🎀 ':'📸 ')+SHOW[si].who; front=!front; };
   }, 3600);
 }).catch(()=>{});
 
