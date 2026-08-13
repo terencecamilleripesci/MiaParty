@@ -6,6 +6,7 @@
 <title>Mia's 1st Birthday 🎀 — the video</title>
 <meta name="description" content="Mia's first year, from day one to her 1st birthday 💕">
 <meta name="theme-color" content="#F9A8D4">
+<meta http-equiv="Cache-Control" content="no-store">
 <meta property="og:title" content="Mia's 1st Birthday 🎀 — watch her first year">
 <meta property="og:description" content="From day one to her first birthday — Mia's story in 18 minutes 💕">
 <meta property="og:image" content="https://terencecamilleripesci.github.io/MiaParty/assets/share.jpg">
@@ -77,13 +78,41 @@ const msg = t => document.getElementById('msg').textContent = t;
    - Android Chrome handles download fine, but in-app browsers often swallow it.
    So: fetch the file, then offer it through the OS share sheet when that's supported,
    and fall back to a normal blob download everywhere else. */
+let readyFile = null;      // the downloaded video, waiting for a FRESH tap
+
+/* TWO STEPS on purpose. iOS only opens the save sheet during a real user tap, and by the
+   time 41 MB has downloaded that tap has "expired" (NotAllowedError). So: first tap
+   downloads and the button turns into "Ready — tap to save"; the second tap shares
+   instantly, inside a valid gesture. */
 async function saveVideo(){
   const btn = document.getElementById('dl');
   const bar = document.getElementById('bar');
+
+  // ---- second tap: hand it to the phone straight away ----
+  if (readyFile){
+    try{
+      if (navigator.canShare && navigator.canShare({ files: [readyFile] })){
+        await navigator.share({ files: [readyFile], title: "Mia's 1st Birthday 🎀" });
+        msg('✅ Saved!');
+      } else {
+        const url = URL.createObjectURL(readyFile);
+        const a = document.createElement('a');
+        a.href = url; a.download = NAME;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+        msg('✅ Saved to your files!');
+      }
+    }catch(e){
+      if (e && e.name === 'AbortError') msg('');
+      else msg('Press and hold the video above → “Save to Photos”.');
+    }
+    return;
+  }
+
+  // ---- first tap: fetch it ----
   btn.disabled = true;
-  const original = btn.textContent;
   try{
-    msg('Preparing the video…');
+    msg('Getting the video ready…');
     bar.style.display = 'block';
     const res = await fetch(FILE);
     if (!res.ok) throw new Error('fetch ' + res.status);
@@ -106,31 +135,18 @@ async function saveVideo(){
     } else {
       blob = await res.blob();
     }
-    const file = new File([blob], NAME, { type: 'video/mp4' });
-
-    if (navigator.canShare && navigator.canShare({ files: [file] })){
-      bar.style.display = 'none'; btn.textContent = original;
-      msg(isIOS ? 'Choose “Save Video” 💕' : 'Choose where to save it 💕');
-      await navigator.share({ files: [file], title: "Mia's 1st Birthday 🎀" });
-      msg('✅ Saved!');
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = NAME;
-      document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 20000);
-      msg('✅ Saved to your downloads!');
-    }
+    readyFile = new File([blob], NAME, { type: 'video/mp4' });
+    bar.style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = '✅ Ready — tap to save';
+    msg(isIOS ? 'Now tap again, then choose “Save Video” 💕'
+              : 'Now tap again to keep it 💕');
   }catch(e){
-    if (e && e.name === 'AbortError'){ msg(''); }      // user closed the share sheet
-    else {
-      msg('Could not save automatically — press and hold the video above, then “Save”.');
-    }
+    bar.style.display = 'none';
+    btn.disabled = false;
+    btn.textContent = '⬇️ Save the video';
+    msg('Press and hold the video above → “Save to Photos”.');
   }
-  document.getElementById('bar').style.display = 'none';
-  document.getElementById('bar').firstElementChild.style.width = '0%';
-  btn.disabled = false; btn.textContent = '⬇️ Save the video';
-  setTimeout(()=>{ if(document.getElementById('msg').textContent.startsWith('✅')) msg(''); }, 6000);
 }
 /* helpful per-phone hint under the buttons */
 addEventListener('DOMContentLoaded', () => {
