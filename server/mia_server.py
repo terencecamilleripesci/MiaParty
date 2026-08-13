@@ -14,10 +14,13 @@ from urllib.parse import unquote
 # Maltese letters have no ASCII decomposition, so NFKD alone deletes them.
 MALTESE_FOLD = {ord(a): b for a, b in
                 zip('ĠġĦħŻżĊċ', ['G', 'g', 'H', 'h', 'Z', 'z', 'C', 'c'])}
+import threading
+LOCK_NAMES = threading.Lock()
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PHOTOS = os.path.join(BASE, '..', 'photos')
 BACKUP = '/home/foxhound/backups/mia-party-photos'   # instant 2nd copy of every photo
+NAMES_FILE = os.path.join(BASE, 'guest_names.json')   # safe-name -> exact typed name
 PIN = '0000'
 PARTY = 'mia2026'          # embedded in the app; stops random internet uploads
 MAX_BYTES = 8 * 1024 * 1024
@@ -98,9 +101,27 @@ class H(http.server.BaseHTTPRequestHandler):
             raw = unquote(raw)
         except Exception:
             pass
+        raw_original = raw                      # keep the guest's exact typing for display
         raw = raw.translate(MALTESE_FOLD)
         raw = unicodedata.normalize('NFKD', raw).encode('ascii', 'ignore').decode('ascii')
+        display = (raw_original or '').strip()[:40]      # EXACTLY what the guest typed
         guest = re.sub(r'[^A-Za-z0-9_-]', '', raw)[:24] or 'guest'
+        # Remember the real name so the album shows "Ġorġ", not the ASCII filename form.
+        if display:
+            try:
+                with LOCK_NAMES:
+                    m = {}
+                    if os.path.isfile(NAMES_FILE):
+                        with open(NAMES_FILE, encoding='utf-8') as nf:
+                            m = json.load(nf)
+                    if m.get(guest) != display:
+                        m[guest] = display
+                        tmp = NAMES_FILE + '.tmp'
+                        with open(tmp, 'w', encoding='utf-8') as nf:
+                            json.dump(m, nf, ensure_ascii=False)
+                        os.replace(tmp, NAMES_FILE)
+            except Exception:
+                pass
         # Collision-proof: same guest + same millisecond used to silently OVERWRITE the
         # earlier photo (and its backup). O_EXCL means we never destroy an existing file.
         ts = int(time.time() * 1000)
@@ -148,7 +169,15 @@ class H(http.server.BaseHTTPRequestHandler):
                    for f in fs if f.endswith('.jpg')]
             self.send_response(200); self._cors()
             self.send_header('Content-Type', 'application/json'); self.end_headers()
-            self.wfile.write(json.dumps({'count': len(out), 'photos': out}).encode()); return
+            names = {}
+            try:
+                if os.path.isfile(NAMES_FILE):
+                    with open(NAMES_FILE, encoding='utf-8') as nf:
+                        names = json.load(nf)
+            except Exception:
+                names = {}
+            self.wfile.write(json.dumps({'count': len(out), 'photos': out,
+                                         'names': names}).encode()); return
         if path.startswith('/photos/'):
             f = re.sub(r'[^A-Za-z0-9_.-]', '', path.split('/photos/', 1)[1])
             fp = os.path.join(PHOTOS, f)

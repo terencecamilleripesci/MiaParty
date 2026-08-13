@@ -73,11 +73,17 @@ async function load(){
     const by={};
     d.photos.forEach(p=>{ const g=p.name.split('_')[0]||'guest'; (by[g]=by[g]||[]).push(p); });
     groups=by;
+    /* show each guest's name EXACTLY as they typed it (Ġorġ, Ħaġar, emoji…) —
+       the filename must stay ASCII-safe, the displayed name does not */
+    realNames = d.names || {};
     renderList();
   }catch(e){ alert('Album offline — try again shortly'); }
 }
 function dlGuest(g){ location.href=API+'/zip?pin='+PIN+'&guest='+encodeURIComponent(g); }
 let groups={};
+let realNames={};
+function esc(t){const d=document.createElement('div');d.textContent=t==null?'':t;return d.innerHTML;}
+const disp = g => realNames[g] || g;   // exact typed name, fallback to the safe name
 /* names-first navigation: list of photographers -> tap a name -> their photos (with Back) */
 function renderList(){
   clearSel();
@@ -85,7 +91,7 @@ function renderList(){
   document.getElementById('grid').innerHTML = names.length ? names.map(g=>`
     <div class="guest gname" onclick="renderGuest('${g}')">
       <div class="ghead">
-        <span>📸 <b>${g}</b> · ${groups[g].length} photo${groups[g].length>1?'s':''}</span>
+        <span>📸 <b>${esc(disp(g))}</b> · ${groups[g].length} photo${groups[g].length>1?'s':''}</span>
         <span style="font-size:1.4rem;color:#F9A8D4">›</span>
       </div>
     </div>`).join('') : '<p class="meta">No photos yet — the party hasn\'t started! 🎈</p>';
@@ -95,8 +101,8 @@ function renderGuest(g){
   document.getElementById('grid').innerHTML = `
     <div class="ghead" style="margin-bottom:12px">
       <button class="mini" onclick="renderList()">‹ Back to names</button>
-      <span>📸 <b>${g}</b> · ${groups[g].length}</span>
-      <button class="mini" onclick="dlGuest('${g}')">⬇️ ${g}'s zip</button>
+      <span>📸 <b>${esc(disp(g))}</b> · ${groups[g].length}</span>
+      <button class="mini" onclick="dlGuest('${g}')">⬇️ ${esc(disp(g))}'s zip</button>
     </div>
     <div class="ggrid">${groups[g].map(p=>`
       <div class="ph" data-name="${p.name}">
