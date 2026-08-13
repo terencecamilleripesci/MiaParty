@@ -93,64 +93,54 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
 .ios-card .pill{width:100%;margin-top:6px}
 .confetti{position:fixed;top:-12px;z-index:45;font-size:1.3rem;animation:cf linear forwards;pointer-events:none}
 @keyframes cf{to{transform:translateY(110dvh) rotate(720deg)}}
+.afterparty{justify-content:flex-start;overflow-y:auto;padding-bottom:40px}
+html,body{overflow:auto}
+.show{position:relative;z-index:2;width:min(84vw,340px);height:min(84vw,340px);margin-top:8px;
+  border-radius:28px;overflow:hidden;border:5px solid #fff;box-shadow:0 18px 44px rgba(190,24,93,.4);background:#FBCFE8}
+.sl{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.2s ease;
+  animation:kb 8s ease-in-out infinite alternate}
+.sl.on{opacity:1}
+.show .by{position:absolute;left:0;right:0;bottom:0;padding:16px 10px 8px;color:#fff;font-weight:800;
+  font-size:.8rem;background:linear-gradient(transparent,rgba(122,27,76,.8))}
+.tx{z-index:2;max-width:34ch;margin-top:10px;font-size:.95rem;font-weight:700;color:#8C3566;line-height:1.5}
+.acts{z-index:2;display:flex;flex-direction:column;gap:10px;margin-top:16px;width:min(90vw,330px)}
+.big{display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:999px;
+  text-decoration:none;font:800 1rem 'Baloo 2';background:linear-gradient(135deg,#EC4899,#BE185D);color:#fff;
+  box-shadow:0 10px 26px rgba(190,24,93,.4)}
+.big.alt{background:#fff;color:#BE185D;border:2.5px solid #F9A8D4;box-shadow:0 4px 14px rgba(190,24,93,.15)}
+.big:active{transform:scale(.97)}
+.thanks{z-index:2;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:18px;max-width:min(92vw,420px)}
+.thanks span{background:#fff;border:2px solid #F9A8D4;border-radius:999px;padding:6px 12px;
+  font:800 .74rem 'Baloo 2';color:#BE185D}
+.tiny{z-index:2;font-size:.74rem;color:#A8548A;font-weight:700;margin-top:14px}
 </style>
 </head>
 <body>
 <div class="bg"></div><div class="scrim"></div>
 
-<div class="app">
-  <button class="namechip" id="nameChip">👤 Set your name</button>
-  <div class="mia miawrap">
-    <img id="slideA" src="assets/slides/s01.jpg" alt="Mia" class="slide on">
-    <img id="slideB" src="assets/slides/s02.jpg" alt="" class="slide">
-  </div>
-  <h1>Mia's 1<sup>st</sup> Birthday <small>🎀 Grazzi talli ġejt! · Be Mia's photographer 📸</small></h1>
-  <div class="film">🎞️ <b id="left">50</b> photos left</div>
-  <button class="snap" id="snap">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-    TAP TO SNAP
-  </button>
-  <div class="hintt">Every photo flies straight to Mia's album — snap the cake, the guests, the chaos! 🎈</div>
+<div class="app afterparty">
   <a class="vidbtn" href="video.html">🎬 Mia's video</a>
-  <div class="rowbtns">
-    <button class="pill" id="installBtn" style="display:none">📲 Get the app</button>
-    <button class="pill" id="bellBtn">🔔 Remind me</button>
+
+  <div class="show" id="show">
+    <img class="sl on" id="slA" alt="">
+    <img class="sl" id="slB" alt="">
+    <div class="by" id="by"></div>
   </div>
-  <div class="ios-guide" id="iosGuide">
-    <div class="ios-card">
-      <div id="guideIOS">
-        <h3>📲 Add Mia's camera to your iPhone</h3>
-        <p>1. Tap the <b>Share</b> button <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#BE185D" stroke-width="2" style="vertical-align:-3px"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg> below</p>
-        <p>2. Choose <b>"Add to Home Screen"</b></p>
-        <p>3. Open it from your home screen — Mia's face will be your app icon! 🎀</p>
-      </div>
-      <div id="guideAndroid" style="display:none">
-        <h3>📲 Add Mia's camera to your phone</h3>
-        <p>1. Tap the <b>⋮ menu</b> (top-right of your browser)</p>
-        <p>2. Choose <b>"Install app"</b> or <b>"Add to Home screen"</b></p>
-        <p>3. Open it from your home screen — Mia's face will be your app icon! 🎀</p>
-        <p style="font-size:.85em;opacity:.8">Already installed it? Swipe up from your home screen — <b>Mia 🎀</b> is in your app drawer.</p>
-        <p style="font-size:.85em;opacity:.8">You can also just keep using it here — the camera works either way 💕</p>
-      </div>
-      <div id="guideDone" style="display:none">
-        <h3>✅ Installed!</h3>
-        <p><b>Mia 🎀</b> is now on your phone.</p>
-        <p>Android usually puts new apps in your <b>app drawer</b> — swipe up from the bottom of your home screen and look for <b>Mia 🎀</b>.</p>
-        <p style="font-size:.85em;opacity:.8">Long-press it there to drag it onto your home screen 💕</p>
-      </div>
-      <div id="guideInApp" style="display:none">
-        <h3>📲 One quick step</h3>
-        <p id="safariLine" style="display:none">On iPhone: tap <b>⋯</b> → <b>Open in Safari</b> (or copy the link below and paste it there).</p>
-        <button class="pill" id="safariBtn" style="display:none;margin-bottom:10px" onclick="openInSafari()">📋 Copy link for Safari</button>
-        <p>You opened this inside <b>WhatsApp/Facebook</b>, which can't install apps.</p>
-        <p>Tap below to open it in <b>Chrome</b>, then tap <b>📲 Get the app</b> again.</p>
-        <button class="pill" onclick="openInChrome()" style="margin-bottom:10px">🌐 Open in Chrome</button>
-        <p style="font-size:.85em;opacity:.8">Not bothered? The camera still works right here — just tap the big button 💕</p>
-      </div>
-      <button class="pill" onclick="document.getElementById('iosGuide').style.display='none'">Got it!</button>
-    </div>
+
+  <h1>Thank you for coming! 🎀<small>Mia's 1st birthday · 13 August 2026</small></h1>
+  <p class="tx">What a day 💕 Thank you for celebrating with us — and for taking
+     <b id="nph">…</b> beautiful photos of Mia's big day.</p>
+
+  <div class="acts">
+    <a class="big" href="gallery-all.html">🖼️ See everyone's photos</a>
+    <a class="big alt" href="video.html">🎬 Watch Mia's video</a>
   </div>
-  <input type="file" id="cam" accept="image/*" capture="environment" style="display:none">
+
+  <div class="thanks" id="thanks"></div>
+  <p class="tiny">Tap a photo to open it · everything is free to save 💕</p>
+</div>
+
+<input type="file" id="cam" accept="image/*" capture="environment" style="display:none">
   <div class="status" id="status"></div>
 </div>
 
@@ -166,122 +156,49 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
 </div>
 
 <script>
-const API = 'https://raspberrypi.silverside-tench.ts.net:8443';
-const PARTY = 'mia2026', LIMIT = 50;
-const PARTY_DAY = new Date('2026-08-13T00:00:00+02:00');   // Mia's birthday — camera unlocks (Malta time)
-const isTester = () => (guest || '').trim().toLowerCase() === 'test';
-const isOpen = () => isTester() || Date.now() >= PARTY_DAY.getTime();
+/* ================= AFTER-PARTY PAGE =================
+   The event is over: this page now says thank you, runs a slideshow of everyone's photos
+   and points to the full gallery + Enya's video. The upload queue below is deliberately
+   left running so any photo still stuck on a guest's phone still reaches the album. */
 const $ = id => document.getElementById(id);
+const API = 'https://raspberrypi.silverside-tench.ts.net:8443';
+const PARTY = 'mia2026';
+let guest = localStorage.mia_guest || '';
 
-/* ---- auto slideshow: crossfade through all of Mia's photos ---- */
-const SLIDES = Array.from({length:17}, (_,i) => 'assets/slides/s' + String(i+1).padStart(2,'0') + '.jpg');
-let si = 0, front = true;
-setInterval(() => {
-  si = (si + 1) % SLIDES.length;
-  const showEl = $(front ? 'slideB' : 'slideA');
-  const hideEl = $(front ? 'slideA' : 'slideB');
-  showEl.src = SLIDES[si];
-  const go = () => { showEl.classList.add('on'); hideEl.classList.remove('on'); front = !front; };
-  showEl.complete ? go() : showEl.onload = go;
-  const nxt = new Image(); nxt.src = SLIDES[(si + 1) % SLIDES.length];   // preload next
-}, 3500);
-
-// floating balloons
-'🎈🎈🎈🩷🧸🎈'.match(/../gu).forEach((e, i) => {
-  const b = document.createElement('div');
-  b.className = 'balloon'; b.textContent = e;
-  b.style.left = (6 + i * 16) + '%';
-  b.style.animationDuration = (11 + i * 2.7) + 's';
-  b.style.animationDelay = (-i * 3.1) + 's';
+/* balloons, because it's still a party page */
+['🎈','🎀','🎂','💕','🎉'].forEach((e,i)=>{
+  const b=document.createElement('div'); b.className='balloon'; b.textContent=e;
+  b.style.left=(8+i*20)+'%'; b.style.animationDuration=(13+i*2.5)+'s'; b.style.animationDelay=(i*2.2)+'s';
   document.body.appendChild(b);
 });
 
-let guest = localStorage.mia_guest || '';
-let used = +(localStorage.mia_used || 0);
+/* slideshow of a few photos from EVERY photographer */
+let SHOW=[], si=0, front=true;
+fetch('gal/slideshow.json?v='+Date.now()).then(r=>r.json()).then(list=>{
+  SHOW = list || [];
+  if(!SHOW.length) return;
+  const a=$('slA'), b=$('slB');
+  a.src='gal/'+SHOW[0].f; $('by').textContent='📸 '+SHOW[0].who;
+  setInterval(()=>{
+    si=(si+1)%SHOW.length;
+    const next = front ? b : a, cur = front ? a : b;
+    next.src='gal/'+SHOW[si].f;
+    next.onload=()=>{ next.classList.add('on'); cur.classList.remove('on');
+                      $('by').textContent='📸 '+SHOW[si].who; front=!front; };
+  }, 3600);
+}).catch(()=>{});
 
-function refresh(){
-  $('left').textContent = Math.max(0, LIMIT - used);
-  if (!isOpen()){
-    $('snap').classList.add('done');
-    const ms = PARTY_DAY.getTime() - Date.now();
-    const d2 = Math.floor(ms / 86400000), h2 = Math.floor(ms % 86400000 / 3600000);
-    $('snap').innerHTML = '🎂<br>OPENS 13 AUG<br><span style="font-size:.62em">' + d2 + ' days ' + h2 + 'h to go! 🎈</span>';
-    return;
-  }
-  $('snap').classList.remove('done');
-  if (used >= LIMIT){
-    $('snap').classList.add('done');
-    $('snap').innerHTML = '🎉<br>FILM FULL!<br><span style="font-size:.7em">grazzi ħafna!</span>';
-  } else if (!$('snap').querySelector('svg')){
-    $('snap').innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:52px;height:52px"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>TAP TO SNAP';
-  }
-}
-setInterval(refresh, 30000);   // countdown ticks + auto-unlock on the day
-function nameChipRefresh(){
-  $('nameChip').textContent = guest ? ('📸 ' + guest) : '👤 Set your name';
-}
-$('nameChip').addEventListener('click', () => {
-  $('guestName').value = guest || '';
-  $('nameModal').style.display = 'flex';
-});
-nameChipRefresh();
-refresh();
+/* photo count + a thank-you chip for every photographer */
+fetch('gal/index.json?v='+Date.now()).then(r=>r.json()).then(d=>{
+  const photos=d.photos||[];
+  $('nph').textContent = photos.length;
+  const counts={}; photos.forEach(p=>counts[p.who]=(counts[p.who]||0)+1);
+  $('thanks').innerHTML = '<span style="background:#BE185D;color:#fff;border-color:#BE185D">💖 Grazzi ħafna</span>' +
+    Object.keys(counts).sort((x,y)=>counts[y]-counts[x])
+      .map(w=>`<span>${w} · ${counts[w]}</span>`).join('');
+}).catch(()=>{ $('nph').textContent='lots of'; });
 
-$('startBtn').addEventListener('click', () => {
-  const n = $('guestName').value.trim();
-  if (!n){ $('guestName').focus(); return; }
-  guest = n; localStorage.mia_guest = n;
-  $('nameModal').style.display = 'none';
-  nameChipRefresh();
-  refresh();
-});
-
-$('snap').addEventListener('click', () => {
-  if (!isOpen()){ setStatus('🎂 The camera opens on 13 August — Mia\'s big day!'); return; }
-  if (!guest){ $('nameModal').style.display = 'flex'; return; }   // ask the name only when it's photo time
-  if (used >= LIMIT) return;
-  $('cam').click();
-});
-
-$('cam').addEventListener('change', async e => {
-  const file = e.target.files && e.target.files[0];
-  e.target.value = '';
-  if (!file) return;
-  used++; localStorage.mia_used = used; refresh();
-  confetti(); popShot();
-  const jpeg = await compress(file);
-  queueUpload(jpeg);
-});
-
-function popShot(){
-  const p = $('pop');
-  p.textContent = ['📸','🎀','🎂','🥳','💖'][used % 5] + ' ' + used + '/' + LIMIT;
-  p.classList.remove('go'); void p.offsetWidth; p.classList.add('go');
-  if (navigator.vibrate) try{ navigator.vibrate(25); }catch(_){}
-}
-function confetti(){
-  for (let i = 0; i < 18; i++){
-    const c = document.createElement('div');
-    c.className = 'confetti';
-    c.textContent = ['🎀','💗','✨','🎈'][i % 4];
-    c.style.left = Math.random() * 100 + '%';
-    c.style.animationDuration = (1.2 + Math.random() * 1.4) + 's';
-    document.body.appendChild(c);
-    setTimeout(() => c.remove(), 3000);
-  }
-}
-
-async function compress(file){
-  const img = await createImageBitmap(file).catch(() => null);
-  if (!img){ return file; }
-  const MAX = 1800;
-  const k = Math.min(1, MAX / Math.max(img.width, img.height));
-  const cv = document.createElement('canvas');
-  cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
-  cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
-  const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.82));
-  return blob || file;
-}
+function setStatus(){}                 /* the old status line is gone from this page */
 
 /* ---- resilient upload queue (IndexedDB): party wifi can cough, photos can't be lost ---- */
 let db;
@@ -371,96 +288,9 @@ pump();
    so Android guests arriving from WhatsApp/Facebook (in-app browsers NEVER fire it)
    saw no install option at all, and the button was a dead tap. Now: the button is
    always offered, and every path leads somewhere useful.                        */
-let deferredPrompt = null;
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isAndroid = /android/i.test(navigator.userAgent);
-const inApp = /FBAN|FBAV|FB_IAB|Instagram|Line\/|WhatsApp|Messenger|TikTok/i.test(navigator.userAgent);
-const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
-
-addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); deferredPrompt = e;
-  if (!standalone) $('installBtn').style.display = 'inline-block';
-});
-addEventListener('appinstalled', () => {
-  /* Android usually puts a newly installed PWA in the APP DRAWER, not on the home screen
-     (Play Store has an "Add apps to Home screen" toggle that is often off), so guests think
-     the install failed. Say plainly where it went. */
-  $('installBtn').style.display = 'none';
-  showGuide('done');
-});
-/* always offer it (unless already installed) — never leave Android with nothing */
-if (!standalone) $('installBtn').style.display = 'inline-block';
-
-async function openInSafari(){
-  /* Apple blocks forcing Safari from a web page, so copy the link and tell them the menu. */
-  try{ await navigator.clipboard.writeText(location.href.split('#')[0]);
-       setStatus('✅ Link copied — open Safari and paste it'); }
-  catch(_){ setStatus('Tap ⋯ → Open in Safari'); }
-}
-function openInChrome(){
-  /* Android in-app browsers: hand the page to real Chrome so it can be installed */
-  const url = location.href.replace(/^https?:\/\//, '');
-  location.href = 'intent://' + url + '#Intent;scheme=https;package=com.android.chrome;end';
-}
-function showGuide(which){
-  document.getElementById('iosGuide').style.display = 'flex';
-  document.getElementById('guideIOS').style.display     = which === 'ios'     ? 'block' : 'none';
-  document.getElementById('guideAndroid').style.display = which === 'android' ? 'block' : 'none';
-  document.getElementById('guideInApp').style.display   = which === 'inapp'   ? 'block' : 'none';
-  document.getElementById('guideDone').style.display    = which === 'done'    ? 'block' : 'none';
-  if (which === 'inapp' && isIOS){
-    document.getElementById('safariLine').style.display = 'block';
-    document.getElementById('safariBtn').style.display  = 'inline-block';
-  }
-}
-/* Chrome only fires beforeinstallprompt after it decides the user is engaged, so a guest
-   who taps the button immediately used to get dumped into manual instructions even though
-   a real one-tap install was seconds away. Wait briefly for it before falling back. */
-function waitForPrompt(ms){
-  if (deferredPrompt) return Promise.resolve(deferredPrompt);
-  return new Promise(resolve => {
-    let done = false;
-    const on = e => { e.preventDefault(); deferredPrompt = e; if (!done){ done = true; resolve(e); } };
-    addEventListener('beforeinstallprompt', on, { once: true });
-    setTimeout(() => { if (!done){ done = true; removeEventListener('beforeinstallprompt', on); resolve(deferredPrompt); } }, ms);
-  });
-}
-$('installBtn').addEventListener('click', async () => {
-  const btn = $('installBtn'), label = btn.textContent;
-  if (isIOS && inApp) return showGuide('ios');    // iPhone-in-WhatsApp: intent:// is useless here
-  if (isIOS)          return showGuide('ios');    // iPhone → Share → Add to Home Screen
-  if (!deferredPrompt && !inApp){                 // Android: give Chrome a moment to offer it
-    btn.textContent = '⏳ one sec…';
-    await waitForPrompt(1800);
-    btn.textContent = label;
-  }
-  if (deferredPrompt){                            // real one-tap install
-    deferredPrompt.prompt(); await deferredPrompt.userChoice;
-    deferredPrompt = null; btn.style.display = 'none';
-    return;
-  }
-  if (inApp) return showGuide('inapp');           // WhatsApp/FB/IG → open in Chrome
-  showGuide('android');                           // no prompt: either already installed, or use ⋮ menu
-});
-
-/* ---- birthday reminder push (real Web Push: Android + installed iOS 16.4+) ---- */
-async function enablePush(){
-  try{
-    if (isIOS && !standalone){ document.getElementById('iosGuide').style.display = 'flex';
-      setStatus('On iPhone: add to Home Screen first, then tap 🔔 again'); return; }
-    const perm = await Notification.requestPermission();
-    if (perm !== 'granted'){ setStatus('Notifications blocked — no reminder for you 🥲'); return; }
-    const reg = await navigator.serviceWorker.ready;
-    const { key } = await (await fetch(API + '/vapid')).json();
-    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true,
-      applicationServerKey: Uint8Array.from(atob(key.replace(/-/g,'+').replace(/_/g,'/') + '=='.slice(0, (4 - key.length % 4) % 4)), c => c.charCodeAt(0)) });
-    const r = await fetch(API + '/subscribe', { method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(sub) });
-    if (r.ok){ $('bellBtn').textContent = '🔔 Reminder set!'; $('bellBtn').disabled = true;
-      setStatus("You'll get a reminder the day before Mia's birthday 🎂"); }
-  }catch(e){ setStatus('Could not set the reminder — try again'); }
-}
-$('bellBtn').addEventListener('click', enablePush);
+/* The camera page's install / in-app-browser handling belonged to the live event.
+   The after-party page has no install button, so all of that is gone — leaving it in
+   only produced null-reference errors. */
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mia's 1st Birthday 🎀 — everyone's photos</title>
+<meta name="description" content="Every photo from Mia's 1st birthday, taken by all of you 💕">
+<meta name="theme-color" content="#F9A8D4">
+<meta property="og:title" content="Mia's 1st Birthday 🎀 — everyone's photos">
+<meta property="og:description" content="Every photo from Mia's big day, taken by all of you 💕">
+<meta property="og:image" content="https://terencecamilleripesci.github.io/MiaParty/assets/share.jpg">
+<meta property="og:url" content="https://terencecamilleripesci.github.io/MiaParty/gallery-all.html">
+<link rel="icon" href="assets/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Baloo 2',system-ui,sans-serif;background:#FFF5F9;color:#7A1B4C;min-height:100dvh}
+.wrap{max-width:1000px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom))}
+h1{color:#BE185D;text-align:center;font-size:clamp(1.4rem,5.5vw,2rem);line-height:1.15}
+h1 small{display:block;font-size:.52em;color:#B94A85;font-weight:700;margin-top:4px}
+.who{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:16px 0 6px}
+.chip{background:#fff;border:2px solid #F9A8D4;border-radius:999px;padding:7px 14px;
+  font:800 .8rem 'Baloo 2';color:#BE185D;cursor:pointer;transition:all .15s}
+.chip.on{background:linear-gradient(135deg,#EC4899,#BE185D);color:#fff;border-color:#BE185D}
+.chip:active{transform:scale(.96)}
+.count{text-align:center;font-size:.82rem;color:#B94A85;font-weight:700;margin:8px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.cell{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;background:#FBCFE8;cursor:pointer}
+.cell img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
+.cell:active img{transform:scale(.96)}
+.cell b{position:absolute;left:0;right:0;bottom:0;padding:10px 6px 5px;font-size:.62rem;color:#fff;
+  background:linear-gradient(transparent,rgba(122,27,76,.75));font-weight:700}
+.top{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:6px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:12px 20px;border-radius:999px;border:none;
+  cursor:pointer;text-decoration:none;font:800 .88rem 'Baloo 2';
+  background:linear-gradient(135deg,#EC4899,#BE185D);color:#fff;box-shadow:0 6px 18px rgba(190,24,93,.3)}
+.btn.alt{background:#fff;color:#BE185D;border:2.5px solid #F9A8D4;box-shadow:none}
+/* lightbox */
+#lb{display:none;position:fixed;inset:0;background:rgba(30,5,18,.96);z-index:60;
+  flex-direction:column;align-items:center;justify-content:center;padding:12px}
+#lb img{max-width:96vw;max-height:76dvh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#lbwho{color:#F9A8D4;font-weight:800;margin:10px 0 6px;font-size:.9rem}
+#lb .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#lb button,#lb a{padding:11px 18px;border-radius:999px;border:none;cursor:pointer;text-decoration:none;
+  font:800 .85rem 'Baloo 2';background:rgba(255,255,255,.15);color:#fff}
+#lb a.save{background:#fff;color:#BE185D}
+#lb .x{position:absolute;top:14px;right:14px;background:rgba(255,255,255,.18)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Mia's 1st Birthday 🎀<small>every photo, taken by all of you 💕</small></h1>
+
+  <div class="top" style="margin-top:14px">
+    <a class="btn" href="video.html">🎬 Watch Mia's video</a>
+    <a class="btn alt" href="./">🏠 Home</a>
+  </div>
+
+  <div class="who" id="who"></div>
+  <div class="count" id="count">loading…</div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div id="lb">
+  <button class="x" onclick="close_()">✕</button>
+  <img id="lbimg" alt="">
+  <div id="lbwho"></div>
+  <div class="row">
+    <button onclick="nav(-1)">‹ Prev</button>
+    <a class="save" id="lbsave" download>⬇️ Save</a>
+    <button onclick="nav(1)">Next ›</button>
+  </div>
+</div>
+
+<script>
+let ALL = [], view = [], filter = '', idx = 0;
+const $ = id => document.getElementById(id);
+const esc = t => { const d=document.createElement('div'); d.textContent=t==null?'':t; return d.innerHTML; };
+
+fetch('gal/index.json?v=' + Date.now()).then(r => r.json()).then(d => {
+  ALL = d.photos || [];
+  const counts = {};
+  ALL.forEach(p => counts[p.who] = (counts[p.who]||0) + 1);
+  const people = Object.keys(counts).sort((a,b) => counts[b]-counts[a]);
+  $('who').innerHTML = `<button class="chip on" onclick="setFilter('')">Everyone (${ALL.length})</button>` +
+    people.map(w => `<button class="chip" onclick="setFilter('${esc(w).replace(/'/g,"\\'")}')">${esc(w)} (${counts[w]})</button>`).join('');
+  render();
+}).catch(() => { $('count').textContent = 'Could not load the photos — try again in a moment.'; });
+
+function setFilter(w){
+  filter = w;
+  [...document.querySelectorAll('.chip')].forEach(c =>
+    c.classList.toggle('on', c.textContent.startsWith(w || 'Everyone')));
+  render();
+}
+function render(){
+  view = filter ? ALL.filter(p => p.who === filter) : ALL;
+  $('count').textContent = view.length + (view.length === 1 ? ' photo' : ' photos');
+  $('grid').innerHTML = view.map((p,i) => `
+    <div class="cell" onclick="open_(${i})">
+      <img loading="lazy" src="gal/${p.f}" alt="">
+      <b>${esc(p.who)}</b>
+    </div>`).join('');
+}
+function open_(i){
+  idx = i; const p = view[idx];
+  $('lbimg').src = 'gal/' + p.f;
+  $('lbwho').textContent = '📸 ' + p.who + ' · ' + (idx+1) + ' / ' + view.length;
+  const s = $('lbsave'); s.href = 'gal/' + p.f; s.setAttribute('download', 'Mia-' + p.who + '-' + (idx+1) + '.jpg');
+  $('lb').style.display = 'flex';
+}
+function close_(){ $('lb').style.display = 'none'; }
+function nav(d){ idx = (idx + d + view.length) % view.length; open_(idx); }
+addEventListener('keydown', e => {
+  if ($('lb').style.display !== 'flex') return;
+  if (e.key === 'Escape') close_();
+  if (e.key === 'ArrowLeft') nav(-1);
+  if (e.key === 'ArrowRight') nav(1);
+});
+$('lb').addEventListener('click', e => { if (e.target.id === 'lb') close_(); });
+</script>
+</body>
+</html>
