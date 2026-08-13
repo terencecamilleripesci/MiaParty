@@ -34,6 +34,10 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
 .btn:active{transform:scale(.97)}
 .note{font-size:.82rem;color:#A8548A;font-weight:700;margin-top:14px;line-height:1.5}
 .copied{font-size:.85rem;color:#BE185D;font-weight:800;min-height:1.2em;margin-top:8px}
+.bar{display:none;max-width:330px;margin:6px auto 0;height:8px;background:#fff;border-radius:999px;
+  overflow:hidden;border:2px solid #F9A8D4}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#EC4899,#BE185D);transition:width .2s}
+.btn:disabled{opacity:.75}
 </style>
 </head>
 <body>
@@ -49,19 +53,93 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   </div>
 
   <div class="btns">
-    <a class="btn" id="dl" href="video/mia-birthday.mp4" download="Mia-1st-Birthday.mp4">
-      ⬇️ Download the video
-    </a>
+    <button class="btn" id="dl" onclick="saveVideo()">⬇️ Save the video</button>
     <button class="btn alt" onclick="share()">🔗 Share this video</button>
     <a class="btn alt" href="./">📸 Back to Mia's camera</a>
   </div>
   <div class="copied" id="msg"></div>
+  <div class="bar" id="bar"><i></i></div>
 
-  <p class="note">18 minutes · works on any phone, tablet or computer<br>
+  <p class="note" id="tip">18 minutes · works on any phone, tablet or computer<br>
      Tap ⬇️ to keep it forever 💕</p>
 </div>
 
 <script>
+const FILE = 'video/mia-birthday.mp4';
+const NAME = 'Mia-1st-Birthday.mp4';
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+              (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const msg = t => document.getElementById('msg').textContent = t;
+
+/* Saving a video reliably on BOTH phones:
+   - iOS Safari IGNORES the download attribute (it just plays the file), so the only real
+     way to keep it is the native share sheet -> "Save Video" / "Save to Files".
+   - Android Chrome handles download fine, but in-app browsers often swallow it.
+   So: fetch the file, then offer it through the OS share sheet when that's supported,
+   and fall back to a normal blob download everywhere else. */
+async function saveVideo(){
+  const btn = document.getElementById('dl');
+  const bar = document.getElementById('bar');
+  btn.disabled = true;
+  const original = btn.textContent;
+  try{
+    msg('Preparing the video…');
+    bar.style.display = 'block';
+    const res = await fetch(FILE);
+    if (!res.ok) throw new Error('fetch ' + res.status);
+    const total = +res.headers.get('content-length') || 0;
+    const reader = res.body && res.body.getReader ? res.body.getReader() : null;
+    let blob;
+    if (reader){
+      const chunks = []; let got = 0;
+      for(;;){
+        const { done, value } = await reader.read();
+        if (done) break;
+        chunks.push(value); got += value.length;
+        if (total){
+          const pct = Math.round(got / total * 100);
+          bar.firstElementChild.style.width = pct + '%';
+          btn.textContent = '⬇️ ' + pct + '%';
+        }
+      }
+      blob = new Blob(chunks, { type: 'video/mp4' });
+    } else {
+      blob = await res.blob();
+    }
+    const file = new File([blob], NAME, { type: 'video/mp4' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })){
+      bar.style.display = 'none'; btn.textContent = original;
+      msg(isIOS ? 'Choose “Save Video” 💕' : 'Choose where to save it 💕');
+      await navigator.share({ files: [file], title: "Mia's 1st Birthday 🎀" });
+      msg('✅ Saved!');
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = NAME;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 20000);
+      msg('✅ Saved to your downloads!');
+    }
+  }catch(e){
+    if (e && e.name === 'AbortError'){ msg(''); }      // user closed the share sheet
+    else {
+      msg('Could not save automatically — press and hold the video above, then “Save”.');
+    }
+  }
+  document.getElementById('bar').style.display = 'none';
+  document.getElementById('bar').firstElementChild.style.width = '0%';
+  btn.disabled = false; btn.textContent = '⬇️ Save the video';
+  setTimeout(()=>{ if(document.getElementById('msg').textContent.startsWith('✅')) msg(''); }, 6000);
+}
+/* helpful per-phone hint under the buttons */
+addEventListener('DOMContentLoaded', () => {
+  const t = document.getElementById('tip');
+  if (t) t.innerHTML = isIOS
+    ? '18 minutes 💕<br>Tap ⬇️ then choose <b>Save Video</b> — or press and hold the video above.'
+    : '18 minutes 💕<br>Tap ⬇️ to keep it on your phone forever.';
+});
+
 const LINK = 'https://terencecamilleripesci.github.io/MiaParty/video.html';
 async function share(){
   const data = { title: "Mia's 1st Birthday 🎀", text: "Watch Mia's first year 💕", url: LINK };
