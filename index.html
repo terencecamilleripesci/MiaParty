@@ -121,7 +121,14 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
         <p>1. Tap the <b>⋮ menu</b> (top-right of your browser)</p>
         <p>2. Choose <b>"Install app"</b> or <b>"Add to Home screen"</b></p>
         <p>3. Open it from your home screen — Mia's face will be your app icon! 🎀</p>
+        <p style="font-size:.85em;opacity:.8">Already installed it? Swipe up from your home screen — <b>Mia 🎀</b> is in your app drawer.</p>
         <p style="font-size:.85em;opacity:.8">You can also just keep using it here — the camera works either way 💕</p>
+      </div>
+      <div id="guideDone" style="display:none">
+        <h3>✅ Installed!</h3>
+        <p><b>Mia 🎀</b> is now on your phone.</p>
+        <p>Android usually puts new apps in your <b>app drawer</b> — swipe up from the bottom of your home screen and look for <b>Mia 🎀</b>.</p>
+        <p style="font-size:.85em;opacity:.8">Long-press it there to drag it onto your home screen 💕</p>
       </div>
       <div id="guideInApp" style="display:none">
         <h3>📲 One quick step</h3>
@@ -364,7 +371,13 @@ addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredPrompt = e;
   if (!standalone) $('installBtn').style.display = 'inline-block';
 });
-addEventListener('appinstalled', () => { $('installBtn').style.display = 'none'; });
+addEventListener('appinstalled', () => {
+  /* Android usually puts a newly installed PWA in the APP DRAWER, not on the home screen
+     (Play Store has an "Add apps to Home screen" toggle that is often off), so guests think
+     the install failed. Say plainly where it went. */
+  $('installBtn').style.display = 'none';
+  showGuide('done');
+});
 /* always offer it (unless already installed) — never leave Android with nothing */
 if (!standalone) $('installBtn').style.display = 'inline-block';
 
@@ -378,6 +391,7 @@ function showGuide(which){
   document.getElementById('guideIOS').style.display     = which === 'ios'     ? 'block' : 'none';
   document.getElementById('guideAndroid').style.display = which === 'android' ? 'block' : 'none';
   document.getElementById('guideInApp').style.display   = which === 'inapp'   ? 'block' : 'none';
+  document.getElementById('guideDone').style.display    = which === 'done'    ? 'block' : 'none';
 }
 /* Chrome only fires beforeinstallprompt after it decides the user is engaged, so a guest
    who taps the button immediately used to get dumped into manual instructions even though
@@ -406,7 +420,7 @@ $('installBtn').addEventListener('click', async () => {
     return;
   }
   if (inApp) return showGuide('inapp');           // WhatsApp/FB/IG → open in Chrome
-  showGuide('android');                           // genuinely unavailable → ⋮ menu steps
+  showGuide('android');                           // no prompt: either already installed, or use ⋮ menu
 });
 
 /* ---- birthday reminder push (real Web Push: Android + installed iOS 16.4+) ---- */
