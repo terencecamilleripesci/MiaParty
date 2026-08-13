@@ -8,7 +8,7 @@
 <meta name="theme-color" content="#F9A8D4">
 <meta http-equiv="Cache-Control" content="no-store">
 <meta property="og:title" content="Mia's 1st Birthday 🎀 — watch her first year">
-<meta property="og:description" content="From day one to her first birthday — Mia's story in 18 minutes 💕">
+<meta property="og:description" content="From day one to her first birthday — Mia's story in 18 minutes 🎬 Video by Enya 💕">
 <meta property="og:image" content="https://terencecamilleripesci.github.io/MiaParty/assets/share.jpg">
 <meta property="og:url" content="https://terencecamilleripesci.github.io/MiaParty/video.html">
 <meta property="og:type" content="video.other">
@@ -33,6 +33,9 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   box-shadow:0 8px 22px rgba(190,24,93,.35)}
 .btn.alt{background:#fff;color:#BE185D;border:2.5px solid #F9A8D4;box-shadow:0 4px 14px rgba(190,24,93,.15)}
 .btn:active{transform:scale(.97)}
+.credit{margin-top:8px;font:800 .92rem 'Baloo 2';color:#BE185D;background:#fff;
+  display:inline-block;padding:7px 16px;border-radius:999px;border:2px solid #F9A8D4;
+  box-shadow:0 4px 12px rgba(190,24,93,.15)}
 .note{font-size:.82rem;color:#A8548A;font-weight:700;margin-top:14px;line-height:1.5}
 .copied{font-size:.85rem;color:#BE185D;font-weight:800;min-height:1.2em;margin-top:8px}
 .bar{display:none;max-width:330px;margin:6px auto 0;height:8px;background:#fff;border-radius:999px;
@@ -45,21 +48,12 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   margin:10px auto 0;max-width:360px;text-align:left;font-size:.9rem;color:#7A1B4C;font-weight:600}
 .help p{margin:6px 0}
 .help hr{border:none;border-top:1.5px dashed #F9A8D4;margin:12px 0}
-.safaribar{display:none;background:#fff;border:2.5px solid #F9A8D4;border-radius:18px;
-  padding:14px 16px;margin:14px auto 0;max-width:380px;font:700 .9rem 'Baloo 2';color:#7A1B4C}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Mia's First Year 🎀<small>from day one to her 1st birthday 💕</small></h1>
-
-  <div class="safaribar" id="safaribar">
-    <b>📌 On iPhone, saving only works in Safari</b>
-    <p style="margin:8px 0 4px;font-weight:600">In Chrome: tap <b>⋯</b> (bottom-right) → <b>Open in Safari</b></p>
-    <p style="margin:0 0 10px;font-weight:600;opacity:.8">Or copy the link and paste it into Safari:</p>
-    <button class="btn" onclick="copyLink()">📋 Copy the link</button>
-    <p style="margin:10px 0 0;font-size:.82rem;opacity:.75">Not bothered? Just <b>press and hold the video</b> → Save to Photos — that works right here.</p>
-  </div>
+  <div class="credit">🎬 Video by <b>Enya</b></div>
 
   <div class="player">
     <video id="v" controls playsinline preload="metadata"
@@ -134,15 +128,6 @@ async function copyLink(){
     msg(url);
   }
 }
-/* show the banner to iPhone users who are NOT in Safari (Chrome, Firefox, WhatsApp, FB…) */
-addEventListener('DOMContentLoaded', () => {
-  const ua = navigator.userAgent;
-  const nonSafari = /CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\//i.test(ua);
-  if (isIOS && nonSafari){
-    const b = document.getElementById('safaribar');
-    if (b) b.style.display = 'block';
-  }
-});
 function showHelp(){
   const h = document.getElementById('help');
   h.style.display = 'block';
