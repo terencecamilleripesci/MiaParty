@@ -12,6 +12,7 @@ import http.server, json, os, re, time, zipfile, io, socketserver
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PHOTOS = os.path.join(BASE, '..', 'photos')
+BACKUP = '/home/foxhound/backups/mia-party-photos'   # instant 2nd copy of every photo
 PIN = '0000'
 PARTY = 'mia2026'          # embedded in the app; stops random internet uploads
 MAX_BYTES = 8 * 1024 * 1024
@@ -85,8 +86,20 @@ class H(http.server.BaseHTTPRequestHandler):
             return self._deny(415, 'jpeg only')
         guest = re.sub(r'[^A-Za-z0-9_-]', '', self.headers.get('X-Guest', 'guest'))[:24] or 'guest'
         name = f"{guest}_{int(time.time()*1000)}.jpg"
-        with open(os.path.join(PHOTOS, name), 'wb') as f:
+        # Write the album copy, fsync it to the disk platter (survives a power cut),
+        # then drop an instant SECOND copy in the backup folder. It is a one-off
+        # irreplaceable event — one photo, two places, no scheduled job to miss.
+        primary = os.path.join(PHOTOS, name)
+        with open(primary, 'wb') as f:
             f.write(data)
+            f.flush(); os.fsync(f.fileno())
+        try:
+            os.makedirs(BACKUP, exist_ok=True)
+            with open(os.path.join(BACKUP, name), 'wb') as bf:
+                bf.write(data)
+                bf.flush(); os.fsync(bf.fileno())
+        except Exception:
+            pass          # a failed backup must NEVER lose the guest their photo
         self.send_response(200); self._cors()
         self.send_header('Content-Type', 'application/json'); self.end_headers()
         self.wfile.write(json.dumps({'ok': True, 'name': name}).encode())

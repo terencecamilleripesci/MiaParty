@@ -110,10 +110,26 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
   </div>
   <div class="ios-guide" id="iosGuide">
     <div class="ios-card">
-      <h3>📲 Add Mia's camera to your phone</h3>
-      <p>1. Tap the <b>Share</b> button <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#BE185D" stroke-width="2" style="vertical-align:-3px"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg> below</p>
-      <p>2. Choose <b>"Add to Home Screen"</b></p>
-      <p>3. Open it from your home screen — Mia's face will be your app icon! 🎀</p>
+      <div id="guideIOS">
+        <h3>📲 Add Mia's camera to your iPhone</h3>
+        <p>1. Tap the <b>Share</b> button <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#BE185D" stroke-width="2" style="vertical-align:-3px"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v14"/></svg> below</p>
+        <p>2. Choose <b>"Add to Home Screen"</b></p>
+        <p>3. Open it from your home screen — Mia's face will be your app icon! 🎀</p>
+      </div>
+      <div id="guideAndroid" style="display:none">
+        <h3>📲 Add Mia's camera to your phone</h3>
+        <p>1. Tap the <b>⋮ menu</b> (top-right of your browser)</p>
+        <p>2. Choose <b>"Install app"</b> or <b>"Add to Home screen"</b></p>
+        <p>3. Open it from your home screen — Mia's face will be your app icon! 🎀</p>
+        <p style="font-size:.85em;opacity:.8">You can also just keep using it here — the camera works either way 💕</p>
+      </div>
+      <div id="guideInApp" style="display:none">
+        <h3>📲 One quick step</h3>
+        <p>You opened this inside <b>WhatsApp/Facebook</b>, which can't install apps.</p>
+        <p>Tap below to open it in <b>Chrome</b>, then tap <b>📲 Get the app</b> again.</p>
+        <button class="pill" onclick="openInChrome()" style="margin-bottom:10px">🌐 Open in Chrome</button>
+        <p style="font-size:.85em;opacity:.8">Not bothered? The camera still works right here — just tap the big button 💕</p>
+      </div>
       <button class="pill" onclick="document.getElementById('iosGuide').style.display='none'">Got it!</button>
     </div>
   </div>
@@ -300,18 +316,44 @@ function setStatus(s){ $('status').textContent = s; clearTimeout(stT); stT = set
 setInterval(pump, 20000);
 addEventListener('online', pump);
 pump();
-/* ---- install button: Android native prompt / iOS guided sheet (2026 best practice) ---- */
+/* ---- install button: works on ANDROID as well as iOS ------------------------
+   The old version only revealed the button when Chrome fired beforeinstallprompt,
+   so Android guests arriving from WhatsApp/Facebook (in-app browsers NEVER fire it)
+   saw no install option at all, and the button was a dead tap. Now: the button is
+   always offered, and every path leads somewhere useful.                        */
 let deferredPrompt = null;
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isAndroid = /android/i.test(navigator.userAgent);
+const inApp = /FBAN|FBAV|FB_IAB|Instagram|Line\/|WhatsApp|Messenger|TikTok/i.test(navigator.userAgent);
 const standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+
 addEventListener('beforeinstallprompt', e => {
   e.preventDefault(); deferredPrompt = e;
   if (!standalone) $('installBtn').style.display = 'inline-block';
 });
-if (isIOS && !standalone) $('installBtn').style.display = 'inline-block';
+addEventListener('appinstalled', () => { $('installBtn').style.display = 'none'; });
+/* always offer it (unless already installed) — never leave Android with nothing */
+if (!standalone) $('installBtn').style.display = 'inline-block';
+
+function openInChrome(){
+  /* Android in-app browsers: hand the page to real Chrome so it can be installed */
+  const url = location.href.replace(/^https?:\/\//, '');
+  location.href = 'intent://' + url + '#Intent;scheme=https;package=com.android.chrome;end';
+}
+function showGuide(which){
+  document.getElementById('iosGuide').style.display = 'flex';
+  document.getElementById('guideIOS').style.display     = which === 'ios'     ? 'block' : 'none';
+  document.getElementById('guideAndroid').style.display = which === 'android' ? 'block' : 'none';
+  document.getElementById('guideInApp').style.display   = which === 'inapp'   ? 'block' : 'none';
+}
 $('installBtn').addEventListener('click', async () => {
-  if (deferredPrompt){ deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $('installBtn').style.display = 'none'; }
-  else if (isIOS){ document.getElementById('iosGuide').style.display = 'flex'; }
+  if (deferredPrompt){                       // Chrome/Edge/Samsung: real one-tap install
+    deferredPrompt.prompt(); await deferredPrompt.userChoice;
+    deferredPrompt = null; $('installBtn').style.display = 'none';
+  }
+  else if (inApp)      showGuide('inapp');   // WhatsApp/FB/IG → send them to Chrome
+  else if (isIOS)      showGuide('ios');     // iPhone → Share → Add to Home Screen
+  else                 showGuide('android'); // Android without the prompt → ⋮ menu steps
 });
 
 /* ---- birthday reminder push (real Web Push: Android + installed iOS 16.4+) ---- */
