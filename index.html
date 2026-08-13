@@ -268,48 +268,81 @@ async function compress(file){
 
 /* ---- resilient upload queue (IndexedDB): party wifi can cough, photos can't be lost ---- */
 let db;
+/* If IndexedDB is blocked (private mode / locked-down browser) the blob used to be
+   silently discarded — that guest lost every photo with no warning. Keep a memory
+   fallback so a photo is never thrown away. */
+let memQ = [];
 const dbReady = new Promise(res => {
-  const rq = indexedDB.open('miaQ', 1);
-  rq.onupgradeneeded = () => rq.result.createObjectStore('q', { autoIncrement: true });
-  rq.onsuccess = () => { db = rq.result; res(); };
-  rq.onerror = () => res();
+  try{
+    const rq = indexedDB.open('miaQ', 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore('q', { autoIncrement: true });
+    rq.onsuccess = () => { db = rq.result; res(); };
+    rq.onerror = () => res();
+    rq.onblocked = () => res();
+  }catch(_){ res(); }              // a throw here must never kill the snap handler
 });
 async function queueUpload(blob){
-  await dbReady;
+  /* store the guest name WITH the photo: on slow wifi the name could change before the
+     queue drains, which filed photos under the wrong person */
+  const item = { blob: blob, guest: guest || 'guest' };
+  try{ await dbReady; }catch(_){}
+  let stored = false;
   if (db){
-    const tx = db.transaction('q', 'readwrite');
-    tx.objectStore('q').add(blob);
+    try{
+      const tx = db.transaction('q', 'readwrite');
+      tx.objectStore('q').add(item);
+      await new Promise(r => { tx.oncomplete = r; tx.onerror = r; tx.onabort = r; });
+      stored = true;
+    }catch(_){ stored = false; }
   }
+  if (!stored) memQ.push(item);
   pump();
 }
 let pumping = false;
 async function pump(){
   if (pumping) return; pumping = true;
-  await dbReady;
+  try{ await dbReady; }catch(_){}
   try{
     while (db){
       const tx = db.transaction('q', 'readonly');
       const getReq = tx.objectStore('q').openCursor();
       const item = await new Promise(r => { getReq.onsuccess = () => r(getReq.result); getReq.onerror = () => r(null); });
       if (!item) break;
-      const ok = await send(item.value);
-      if (!ok){ setStatus('📶 saving photos… will retry'); break; }
+      const v = item.value || {};
+      const res = await send(v.blob || item.value, v.guest);
+      if (res === 'retry'){ setStatus('📶 saving photos… will retry'); break; }
+      /* 'ok' or 'permanent' → remove either way: one photo the server will never accept
+         must not block every later photo from this guest */
       const dx = db.transaction('q', 'readwrite');
       dx.objectStore('q').delete(item.key);
       await new Promise(r => { dx.oncomplete = r; dx.onerror = r; });
-      setStatus('💖 photo delivered to Mia\'s album!');
+      setStatus(res === 'ok' ? '💖 photo delivered to Mia\'s album!' : '⚠️ one photo could not be sent');
+    }
+    while (memQ.length){                     // fallback queue (no IndexedDB)
+      const it = memQ[0];
+      const res = await send(it.blob, it.guest);
+      if (res === 'retry'){ setStatus('📶 saving photos… will retry'); break; }
+      memQ.shift();
+      setStatus(res === 'ok' ? '💖 photo delivered to Mia\'s album!' : '⚠️ one photo could not be sent');
     }
   } finally { pumping = false; }
 }
-async function send(blob){
+async function send(blob, who){
   try{
     const r = await fetch(API + '/upload', {
       method: 'POST',
-      headers: { 'Content-Type': 'image/jpeg', 'X-Guest': guest || 'guest', 'X-Party': PARTY },
+      /* encodeURIComponent: Maltese letters (Ġ ħ ż ċ) and emoji are NOT Latin-1, and a
+         raw non-Latin-1 header value makes fetch THROW — that silently lost every photo
+         for guests called Ġorġ / Ħaġar / Ċetta / Żeppi. The server percent-decodes it. */
+      headers: { 'Content-Type': 'image/jpeg',
+                 'X-Guest': encodeURIComponent(who || guest || 'guest'),
+                 'X-Party': PARTY },
       body: blob
     });
-    return r.ok;
-  }catch(_){ return false; }
+    if (r.ok) return 'ok';
+    if (r.status >= 400 && r.status < 500) return 'permanent';  // 413/415/403 — retrying can't help
+    return 'retry';
+  }catch(_){ return 'retry'; }
 }
 let stT;
 function setStatus(s){ $('status').textContent = s; clearTimeout(stT); stT = setTimeout(() => $('status').textContent = '', 4000); }

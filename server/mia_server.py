@@ -8,7 +8,12 @@ Endpoints:
   GET  /health
 Photos land in ../photos/ — never leaves the Pi unless the mother downloads.
 """
-import http.server, json, os, re, time, zipfile, io, socketserver
+import http.server, json, os, re, time, zipfile, io, socketserver, unicodedata
+from urllib.parse import unquote
+
+# Maltese letters have no ASCII decomposition, so NFKD alone deletes them.
+MALTESE_FOLD = {ord(a): b for a, b in
+                zip('ĠġĦħŻżĊċ', ['G', 'g', 'H', 'h', 'Z', 'z', 'C', 'c'])}
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 PHOTOS = os.path.join(BASE, '..', 'photos')
@@ -84,13 +89,33 @@ class H(http.server.BaseHTTPRequestHandler):
         data = self.rfile.read(n)
         if not data.startswith(b'\xff\xd8'):
             return self._deny(415, 'jpeg only')
-        guest = re.sub(r'[^A-Za-z0-9_-]', '', self.headers.get('X-Guest', 'guest'))[:24] or 'guest'
-        name = f"{guest}_{int(time.time()*1000)}.jpg"
+        # The app percent-encodes the name (Maltese Ġ ħ ż ċ and emoji are not Latin-1 and
+        # would make the browser refuse to send the header at all). Decode, then fold the
+        # Maltese letters to plain ASCII so "Ġorġ" stays "Gorg" instead of collapsing to
+        # "or" — different guests must never merge into one bucket.
+        raw = self.headers.get('X-Guest', 'guest')
+        try:
+            raw = unquote(raw)
+        except Exception:
+            pass
+        raw = raw.translate(MALTESE_FOLD)
+        raw = unicodedata.normalize('NFKD', raw).encode('ascii', 'ignore').decode('ascii')
+        guest = re.sub(r'[^A-Za-z0-9_-]', '', raw)[:24] or 'guest'
+        # Collision-proof: same guest + same millisecond used to silently OVERWRITE the
+        # earlier photo (and its backup). O_EXCL means we never destroy an existing file.
+        ts = int(time.time() * 1000)
+        name, fd, suffix = None, None, 0
+        while fd is None:
+            cand = f"{guest}_{ts}{'' if suffix == 0 else '-' + str(suffix)}.jpg"
+            try:
+                fd = os.open(os.path.join(PHOTOS, cand), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o644)
+                name = cand
+            except FileExistsError:
+                suffix += 1
         # Write the album copy, fsync it to the disk platter (survives a power cut),
         # then drop an instant SECOND copy in the backup folder. It is a one-off
         # irreplaceable event — one photo, two places, no scheduled job to miss.
-        primary = os.path.join(PHOTOS, name)
-        with open(primary, 'wb') as f:
+        with os.fdopen(fd, 'wb') as f:      # fd already created exclusively above
             f.write(data)
             f.flush(); os.fsync(f.fileno())
         try:
