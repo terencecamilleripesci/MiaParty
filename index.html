@@ -379,14 +379,34 @@ function showGuide(which){
   document.getElementById('guideAndroid').style.display = which === 'android' ? 'block' : 'none';
   document.getElementById('guideInApp').style.display   = which === 'inapp'   ? 'block' : 'none';
 }
+/* Chrome only fires beforeinstallprompt after it decides the user is engaged, so a guest
+   who taps the button immediately used to get dumped into manual instructions even though
+   a real one-tap install was seconds away. Wait briefly for it before falling back. */
+function waitForPrompt(ms){
+  if (deferredPrompt) return Promise.resolve(deferredPrompt);
+  return new Promise(resolve => {
+    let done = false;
+    const on = e => { e.preventDefault(); deferredPrompt = e; if (!done){ done = true; resolve(e); } };
+    addEventListener('beforeinstallprompt', on, { once: true });
+    setTimeout(() => { if (!done){ done = true; removeEventListener('beforeinstallprompt', on); resolve(deferredPrompt); } }, ms);
+  });
+}
 $('installBtn').addEventListener('click', async () => {
-  if (deferredPrompt){                       // Chrome/Edge/Samsung: real one-tap install
-    deferredPrompt.prompt(); await deferredPrompt.userChoice;
-    deferredPrompt = null; $('installBtn').style.display = 'none';
+  const btn = $('installBtn'), label = btn.textContent;
+  if (isIOS && inApp) return showGuide('ios');    // iPhone-in-WhatsApp: intent:// is useless here
+  if (isIOS)          return showGuide('ios');    // iPhone → Share → Add to Home Screen
+  if (!deferredPrompt && !inApp){                 // Android: give Chrome a moment to offer it
+    btn.textContent = '⏳ one sec…';
+    await waitForPrompt(1800);
+    btn.textContent = label;
   }
-  else if (inApp)      showGuide('inapp');   // WhatsApp/FB/IG → send them to Chrome
-  else if (isIOS)      showGuide('ios');     // iPhone → Share → Add to Home Screen
-  else                 showGuide('android'); // Android without the prompt → ⋮ menu steps
+  if (deferredPrompt){                            // real one-tap install
+    deferredPrompt.prompt(); await deferredPrompt.userChoice;
+    deferredPrompt = null; btn.style.display = 'none';
+    return;
+  }
+  if (inApp) return showGuide('inapp');           // WhatsApp/FB/IG → open in Chrome
+  showGuide('android');                           // genuinely unavailable → ⋮ menu steps
 });
 
 /* ---- birthday reminder push (real Web Push: Android + installed iOS 16.4+) ---- */
