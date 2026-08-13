@@ -140,8 +140,8 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
       </div>
       <div id="guideInApp" style="display:none">
         <h3>📲 One quick step</h3>
-        <p id="safariLine" style="display:none">On iPhone, tap below to open in <b>Safari</b> — then everything works.</p>
-        <button class="pill" id="safariBtn" style="display:none;margin-bottom:10px" onclick="openInSafari()">🧭 Open in Safari</button>
+        <p id="safariLine" style="display:none">On iPhone: tap <b>⋯</b> → <b>Open in Safari</b> (or copy the link below and paste it there).</p>
+        <button class="pill" id="safariBtn" style="display:none;margin-bottom:10px" onclick="openInSafari()">📋 Copy link for Safari</button>
         <p>You opened this inside <b>WhatsApp/Facebook</b>, which can't install apps.</p>
         <p>Tap below to open it in <b>Chrome</b>, then tap <b>📲 Get the app</b> again.</p>
         <button class="pill" onclick="openInChrome()" style="margin-bottom:10px">🌐 Open in Chrome</button>
@@ -391,10 +391,11 @@ addEventListener('appinstalled', () => {
 /* always offer it (unless already installed) — never leave Android with nothing */
 if (!standalone) $('installBtn').style.display = 'inline-block';
 
-function openInSafari(){
-  /* iPhone: x-safari-https: hands the page to Safari (no official API exists) */
-  const bare = location.href.replace(/^https?:\/\//, '').split('#')[0];
-  location.href = 'x-safari-https://' + bare;
+async function openInSafari(){
+  /* Apple blocks forcing Safari from a web page, so copy the link and tell them the menu. */
+  try{ await navigator.clipboard.writeText(location.href.split('#')[0]);
+       setStatus('✅ Link copied — open Safari and paste it'); }
+  catch(_){ setStatus('Tap ⋯ → Open in Safari'); }
 }
 function openInChrome(){
   /* Android in-app browsers: hand the page to real Chrome so it can be installed */

@@ -54,8 +54,11 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   <h1>Mia's First Year 🎀<small>from day one to her 1st birthday 💕</small></h1>
 
   <div class="safaribar" id="safaribar">
-    <span>Using Chrome? Saving only works in Safari on iPhone.</span>
-    <button class="btn" style="margin-top:8px" onclick="openInSafari()">🧭 Open in Safari</button>
+    <b>📌 On iPhone, saving only works in Safari</b>
+    <p style="margin:8px 0 4px;font-weight:600">In Chrome: tap <b>⋯</b> (bottom-right) → <b>Open in Safari</b></p>
+    <p style="margin:0 0 10px;font-weight:600;opacity:.8">Or copy the link and paste it into Safari:</p>
+    <button class="btn" onclick="copyLink()">📋 Copy the link</button>
+    <p style="margin:10px 0 0;font-size:.82rem;opacity:.75">Not bothered? Just <b>press and hold the video</b> → Save to Photos — that works right here.</p>
   </div>
 
   <div class="player">
@@ -79,9 +82,9 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
     <p>1. <b>Press and hold</b> the video above</p>
     <p>2. Choose <b>“Save to Photos”</b> (iPhone) or <b>“Download video”</b> (Android)</p>
     <hr>
-    <p style="opacity:.85">On iPhone using <b>Chrome</b>? Chrome can’t save files on iPhone.
-       Open this page in <b>Safari</b> instead, then tap Save.</p>
-    <button class="btn alt" style="margin-top:8px" onclick="openInSafari()">🧭 Open this page in Safari</button>
+    <p style="opacity:.85">On iPhone using <b>Chrome</b>? Chrome can’t save files on iPhone —
+       Apple doesn’t allow it. Tap <b>⋯</b> at the bottom-right → <b>Open in Safari</b>, then tap Save.</p>
+    <button class="btn alt" style="margin-top:8px" onclick="copyLink()">📋 Copy link (paste in Safari)</button>
     <a class="btn alt" style="margin-top:8px" href="video/mia-birthday.mp4" target="_blank" rel="noopener">
       ▶️ Open the video on its own
     </a>
@@ -120,14 +123,16 @@ function canShareFiles(){
     return !!(navigator.canShare && navigator.canShare({ files: [probe] }));
   }catch(_){ return false; }
 }
-/* iOS has no official "open in Safari" API, but the x-safari-https: scheme has worked for
-   years and is how you escape Chrome/Firefox/in-app browsers on iPhone. If the system
-   ignores it nothing happens, so we also show the manual route underneath. */
-function openInSafari(){
-  const bare = location.href.replace(/^https?:\/\//, '').split('#')[0];
-  msg('Opening Safari…');
-  location.href = 'x-safari-https://' + bare;
-  setTimeout(() => msg('If nothing happened: tap ⋯ (or the share icon) → “Open in Safari”.'), 1500);
+/* There is NO way for a web page to force Safari open on iOS — Apple blocks it (the old
+   the exact menu steps instead of a button that silently does nothing. */
+async function copyLink(){
+  const url = 'https://terencecamilleripesci.github.io/MiaParty/video.html';
+  try{
+    await navigator.clipboard.writeText(url);
+    msg('✅ Link copied — open Safari and paste it');
+  }catch(_){
+    msg(url);
+  }
 }
 /* show the banner to iPhone users who are NOT in Safari (Chrome, Firefox, WhatsApp, FB…) */
 addEventListener('DOMContentLoaded', () => {
