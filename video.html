@@ -39,6 +39,12 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   overflow:hidden;border:2px solid #F9A8D4}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#EC4899,#BE185D);transition:width .2s}
 .btn:disabled{opacity:.75}
+.trouble{background:none;border:none;color:#BE185D;font:700 .82rem 'Baloo 2';text-decoration:underline;
+  cursor:pointer;margin-top:12px;padding:8px}
+.help{display:none;background:#fff;border:2.5px solid #F9A8D4;border-radius:18px;padding:16px 18px;
+  margin:10px auto 0;max-width:360px;text-align:left;font-size:.9rem;color:#7A1B4C;font-weight:600}
+.help p{margin:6px 0}
+.help hr{border:none;border-top:1.5px dashed #F9A8D4;margin:12px 0}
 </style>
 </head>
 <body>
@@ -60,6 +66,18 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   </div>
   <div class="copied" id="msg"></div>
   <div class="bar" id="bar"><i></i></div>
+  <button class="trouble" onclick="showHelp()">Trouble saving? tap here</button>
+  <div class="help" id="help">
+    <b>Easiest way — works on every phone:</b>
+    <p>1. <b>Press and hold</b> the video above</p>
+    <p>2. Choose <b>“Save to Photos”</b> (iPhone) or <b>“Download video”</b> (Android)</p>
+    <hr>
+    <p style="opacity:.85">On iPhone using <b>Chrome</b>? Chrome can’t save files on iPhone.
+       Open this page in <b>Safari</b> instead, then tap Save.</p>
+    <a class="btn alt" style="margin-top:8px" href="video/mia-birthday.mp4" target="_blank" rel="noopener">
+      ▶️ Open the video on its own
+    </a>
+  </div>
 
   <p class="note" id="tip">18 minutes · works on any phone, tablet or computer<br>
      Tap ⬇️ to keep it forever 💕</p>
@@ -84,9 +102,31 @@ let readyFile = null;      // the downloaded video, waiting for a FRESH tap
    time 41 MB has downloaded that tap has "expired" (NotAllowedError). So: first tap
    downloads and the button turns into "Ready — tap to save"; the second tap shares
    instantly, inside a valid gesture. */
+/* Can this browser actually hand a FILE to the OS? Safari iOS: yes. Chrome on Android:
+   yes. Chrome/Firefox on iOS: NO — they're WebKit without file sharing, and they ignore
+   the download attribute too, so there is genuinely no way to save from the page. Detect
+   it up front instead of downloading 41 MB and failing at the end. */
+function canShareFiles(){
+  try{
+    const probe = new File([new Blob(['x'])], 'x.mp4', { type: 'video/mp4' });
+    return !!(navigator.canShare && navigator.canShare({ files: [probe] }));
+  }catch(_){ return false; }
+}
+function showHelp(){
+  const h = document.getElementById('help');
+  h.style.display = 'block';
+  h.scrollIntoView({ behavior:'smooth', block:'center' });
+}
 async function saveVideo(){
   const btn = document.getElementById('dl');
   const bar = document.getElementById('bar');
+
+  // browser that cannot save a file at all → tell them the way that always works
+  if (!readyFile && isIOS && !canShareFiles()){
+    msg('');
+    showHelp();
+    return;
+  }
 
   // ---- second tap: hand it to the phone straight away ----
   if (readyFile){
