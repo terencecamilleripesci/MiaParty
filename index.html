@@ -140,6 +140,8 @@ h1 small{display:block;font-size:.55em;color:#B94A85;font-weight:700}
       </div>
       <div id="guideInApp" style="display:none">
         <h3>📲 One quick step</h3>
+        <p id="safariLine" style="display:none">On iPhone, tap below to open in <b>Safari</b> — then everything works.</p>
+        <button class="pill" id="safariBtn" style="display:none;margin-bottom:10px" onclick="openInSafari()">🧭 Open in Safari</button>
         <p>You opened this inside <b>WhatsApp/Facebook</b>, which can't install apps.</p>
         <p>Tap below to open it in <b>Chrome</b>, then tap <b>📲 Get the app</b> again.</p>
         <button class="pill" onclick="openInChrome()" style="margin-bottom:10px">🌐 Open in Chrome</button>
@@ -389,6 +391,11 @@ addEventListener('appinstalled', () => {
 /* always offer it (unless already installed) — never leave Android with nothing */
 if (!standalone) $('installBtn').style.display = 'inline-block';
 
+function openInSafari(){
+  /* iPhone: x-safari-https: hands the page to Safari (no official API exists) */
+  const bare = location.href.replace(/^https?:\/\//, '').split('#')[0];
+  location.href = 'x-safari-https://' + bare;
+}
 function openInChrome(){
   /* Android in-app browsers: hand the page to real Chrome so it can be installed */
   const url = location.href.replace(/^https?:\/\//, '');
@@ -400,6 +407,10 @@ function showGuide(which){
   document.getElementById('guideAndroid').style.display = which === 'android' ? 'block' : 'none';
   document.getElementById('guideInApp').style.display   = which === 'inapp'   ? 'block' : 'none';
   document.getElementById('guideDone').style.display    = which === 'done'    ? 'block' : 'none';
+  if (which === 'inapp' && isIOS){
+    document.getElementById('safariLine').style.display = 'block';
+    document.getElementById('safariBtn').style.display  = 'inline-block';
+  }
 }
 /* Chrome only fires beforeinstallprompt after it decides the user is engaged, so a guest
    who taps the button immediately used to get dumped into manual instructions even though

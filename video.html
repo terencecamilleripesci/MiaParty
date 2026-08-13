@@ -45,11 +45,18 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
   margin:10px auto 0;max-width:360px;text-align:left;font-size:.9rem;color:#7A1B4C;font-weight:600}
 .help p{margin:6px 0}
 .help hr{border:none;border-top:1.5px dashed #F9A8D4;margin:12px 0}
+.safaribar{display:none;background:#fff;border:2.5px solid #F9A8D4;border-radius:18px;
+  padding:14px 16px;margin:14px auto 0;max-width:380px;font:700 .9rem 'Baloo 2';color:#7A1B4C}
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Mia's First Year 🎀<small>from day one to her 1st birthday 💕</small></h1>
+
+  <div class="safaribar" id="safaribar">
+    <span>Using Chrome? Saving only works in Safari on iPhone.</span>
+    <button class="btn" style="margin-top:8px" onclick="openInSafari()">🧭 Open in Safari</button>
+  </div>
 
   <div class="player">
     <video id="v" controls playsinline preload="metadata"
@@ -74,6 +81,7 @@ video{width:100%;display:block;max-height:72dvh;background:#000}
     <hr>
     <p style="opacity:.85">On iPhone using <b>Chrome</b>? Chrome can’t save files on iPhone.
        Open this page in <b>Safari</b> instead, then tap Save.</p>
+    <button class="btn alt" style="margin-top:8px" onclick="openInSafari()">🧭 Open this page in Safari</button>
     <a class="btn alt" style="margin-top:8px" href="video/mia-birthday.mp4" target="_blank" rel="noopener">
       ▶️ Open the video on its own
     </a>
@@ -112,6 +120,24 @@ function canShareFiles(){
     return !!(navigator.canShare && navigator.canShare({ files: [probe] }));
   }catch(_){ return false; }
 }
+/* iOS has no official "open in Safari" API, but the x-safari-https: scheme has worked for
+   years and is how you escape Chrome/Firefox/in-app browsers on iPhone. If the system
+   ignores it nothing happens, so we also show the manual route underneath. */
+function openInSafari(){
+  const bare = location.href.replace(/^https?:\/\//, '').split('#')[0];
+  msg('Opening Safari…');
+  location.href = 'x-safari-https://' + bare;
+  setTimeout(() => msg('If nothing happened: tap ⋯ (or the share icon) → “Open in Safari”.'), 1500);
+}
+/* show the banner to iPhone users who are NOT in Safari (Chrome, Firefox, WhatsApp, FB…) */
+addEventListener('DOMContentLoaded', () => {
+  const ua = navigator.userAgent;
+  const nonSafari = /CriOS|FxiOS|EdgiOS|OPiOS|FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\//i.test(ua);
+  if (isIOS && nonSafari){
+    const b = document.getElementById('safaribar');
+    if (b) b.style.display = 'block';
+  }
+});
 function showHelp(){
   const h = document.getElementById('help');
   h.style.display = 'block';
