@@ -29,8 +29,8 @@ h1 small{display:block;font-size:.52em;color:#B94A85;font-weight:700;margin-top:
 .cell img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .3s}
 .cell:active img{transform:scale(.96)}
 .save1{position:absolute;top:6px;right:6px;background:rgba(255,255,255,.92);color:#BE185D;
-  border-radius:999px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;
-  text-decoration:none;font-size:.85rem;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  border:none;cursor:pointer;border-radius:999px;width:34px;height:34px;display:flex;align-items:center;
+  justify-content:center;font-size:.9rem;box-shadow:0 2px 8px rgba(0,0,0,.2);padding:0}
 .save1:active{transform:scale(.9)}
 .cell b{position:absolute;left:0;right:0;bottom:0;padding:10px 6px 5px;font-size:.62rem;color:#fff;
   background:linear-gradient(transparent,rgba(122,27,76,.75));font-weight:700}
@@ -72,7 +72,7 @@ h1 small{display:block;font-size:.52em;color:#B94A85;font-weight:700;margin-top:
   <div id="lbwho"></div>
   <div class="row">
     <button onclick="nav(-1)">‹ Prev</button>
-    <a class="save" id="lbsave" download>⬇️ Save</a>
+    <button class="save" id="lbsave">⬇️ Save</button>
     <button onclick="nav(1)">Next ›</button>
   </div>
 </div>
@@ -92,6 +92,45 @@ fetch('gal/index.json?v=' + Date.now()).then(r => r.json()).then(d => {
   render();
 }).catch(() => { $('count').textContent = 'Could not load the photos — try again in a moment.'; });
 
+/* Tapping ⬇️ must SAVE, never open the picture. A plain download link is no good on
+   iPhone — Safari ignores the download attribute and just navigates to the image, which
+   is exactly the "it opens the pic" complaint. So: pull the bytes, then hand them to the
+   phone's own save sheet (iPhone: "Save Image" -> Photos), or download directly elsewhere. */
+async function savePhoto(ev, file, who, n){
+  ev.preventDefault(); ev.stopPropagation();
+  const btn = ev.currentTarget;
+  const label = btn.textContent;
+  btn.textContent = '…';
+  const name = 'Mia-' + String(who).replace(/[^\w -]/g,'') + '-' + n + '.jpg';
+  try{
+    const res = await fetch('gal/' + file);
+    const blob = await res.blob();
+    const f = new File([blob], name, { type: 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [f] })){
+      await navigator.share({ files: [f] });          // iPhone: Save Image
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 20000);
+    }
+    btn.textContent = '✓';
+  }catch(e){
+    btn.textContent = (e && e.name === 'AbortError') ? label : '⚠';
+    if (e && e.name !== 'AbortError') toast('Press and hold the photo → Save to Photos');
+  }
+  setTimeout(()=>{ btn.textContent = label; }, 1600);
+}
+function toast(t){
+  let el = document.getElementById('toastx');
+  if (!el){ el = document.createElement('div'); el.id='toastx';
+    el.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#BE185D;color:#fff;'+
+      'padding:11px 18px;border-radius:999px;font:800 .82rem "Baloo 2";z-index:99;box-shadow:0 8px 22px rgba(0,0,0,.3)';
+    document.body.appendChild(el); }
+  el.textContent = t; el.style.display='block';
+  clearTimeout(window.__tt); window.__tt = setTimeout(()=>el.style.display='none', 3500);
+}
 function setFilter(w){
   filter = w;
   [...document.querySelectorAll('.chip')].forEach(c =>
@@ -105,15 +144,15 @@ function render(){
     <div class="cell">
       <img loading="lazy" src="gal/${p.f}" alt="" onclick="open_(${i})">
       <b>${esc(p.who)}</b>
-      <a class="save1" href="gal/${p.f}" download="Mia-${esc(p.who)}-${i+1}.jpg"
-         onclick="event.stopPropagation()" title="Save this photo">⬇️</a>
+      <button class="save1" onclick="savePhoto(event,'${p.f}','${esc(p.who).replace(/'/g,"\\'")}',${i+1})"
+         title="Save this photo">⬇️</button>
     </div>`).join('');
 }
 function open_(i){
   idx = i; const p = view[idx];
   $('lbimg').src = 'gal/' + p.f;
   $('lbwho').textContent = '📸 ' + p.who + ' · ' + (idx+1) + ' / ' + view.length;
-  const s = $('lbsave'); s.href = 'gal/' + p.f; s.setAttribute('download', 'Mia-' + p.who + '-' + (idx+1) + '.jpg');
+  $('lbsave').onclick = e => savePhoto(e, p.f, p.who, idx+1);
   $('lb').style.display = 'flex';
 }
 function close_(){ $('lb').style.display = 'none'; }
