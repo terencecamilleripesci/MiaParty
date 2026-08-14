@@ -62,11 +62,26 @@ button{padding:13px 26px;border-radius:999px;border:none;background:linear-gradi
 const API='https://raspberrypi.silverside-tench.ts.net:8443';
 let PIN='';
 function open_(){ PIN=document.getElementById('pin').value; load(); }
+let VIA_CDN = false;      // true when we fall back to the published copies
 async function load(){
   try{
-    const r=await fetch(API+'/list?pin='+PIN);
-    if(!r.ok){ alert('Wrong PIN'); return; }
-    const d=await r.json();
+    let d;
+    try{
+      const r=await fetch(API+'/list?pin='+PIN);
+      if(!r.ok){ alert('Wrong PIN'); return; }
+      d=await r.json();
+    }catch(netErr){
+      /* The Pi is unreachable from this browser. That happens whenever the device has
+         Tailscale on (the Pi resolves to a private address and browsers refuse to load it
+         from a public page), or simply when away from home. Rather than showing "album
+         offline", fall back to the published gallery copies so she can always see and
+         save the photos. */
+      const g=await (await fetch('gal/index.json?v='+Date.now())).json();
+      d={count:(g.photos||[]).length,
+         photos:(g.photos||[]).map(x=>({name:x.f,size:0})),
+         names:g.names||{}};
+      VIA_CDN = true;
+    }
     document.getElementById('lock').style.display='none';
     document.getElementById('gal').style.display='block';
     document.getElementById('count').textContent=d.count;
@@ -76,10 +91,22 @@ async function load(){
     /* show each guest's name EXACTLY as they typed it (Ġorġ, Ħaġar, emoji…) —
        the filename must stay ASCII-safe, the displayed name does not */
     realNames = d.names || {};
+    if (VIA_CDN){
+      const n=document.createElement('p');
+      n.className='meta';
+      n.style.cssText='background:#fff;border:2px solid #F9A8D4;border-radius:14px;padding:10px;margin:8px 0';
+      n.innerHTML='📶 Showing the published copies (your Pi isn\'t reachable from here).<br>'+
+                  'Everything is viewable and saveable. For the full-resolution originals, open this on your home wifi with Tailscale off.';
+      document.getElementById('gal').prepend(n);
+      ['dl','dlSel'].forEach(fn=>{});
+    }
     renderList();
   }catch(e){ alert('Album offline — try again shortly'); }
 }
-function dlGuest(g){ location.href=API+'/zip?pin='+PIN+'&guest='+encodeURIComponent(g); }
+function dlGuest(g){
+  if (VIA_CDN){ alert('Open this at home (Tailscale off) for per-person zips — or use ⬇️ on each photo.'); return; }
+  location.href=API+'/zip?pin='+PIN+'&guest='+encodeURIComponent(g);
+}
 let groups={};
 let realNames={};
 function esc(t){const d=document.createElement('div');d.textContent=t==null?'':t;return d.innerHTML;}
@@ -106,7 +133,7 @@ function renderGuest(g){
     </div>
     <div class="ggrid">${groups[g].map(p=>`
       <div class="ph" data-name="${p.name}">
-        <a href="javascript:void(0)" onclick="lbOpen('${g}','${p.name}')"><img loading="lazy" src="${API}/photos/${p.name}?pin=${PIN}" alt=""></a>
+        <a href="javascript:void(0)" onclick="lbOpen('${g}','${p.name}')"><img loading="lazy" src="${photoURL(p.name)}" alt=""></a>
         <input type="checkbox" class="pick" onchange="selChange()" data-name="${p.name}"
           style="position:absolute;top:6px;left:6px;width:22px;height:22px;accent-color:#EC4899">
         <button class="dl1" onclick="dlOne('${p.name}')">⬇️</button>
@@ -136,7 +163,7 @@ function lbOpen(g,name){
 }
 function lbShow(){
   const p=lbList[lbIdx]; if(!p) return;
-  document.getElementById('lbImg').src=API+'/photos/'+p.name+'?pin='+PIN;
+  document.getElementById('lbImg').src=photoURL(p.name);
   document.getElementById('lbName').textContent=(lbIdx+1)+' / '+lbList.length+' · '+p.name.split('_')[0];
   const cb=document.querySelector('.pick[data-name="'+p.name+'"]');
   document.getElementById('lbSelBtn').textContent=(cb&&cb.checked)?'✅ Selected':'☑️ Select';
@@ -147,16 +174,20 @@ function lbSel(){
   if(cb){ cb.checked=!cb.checked; selChange(); lbShow(); }
 }
 function lbClose(){ document.getElementById('lb').style.display='none'; }
+function photoURL(n){ return VIA_CDN ? ('gal/'+n) : (API+'/photos/'+n+'?pin='+PIN); }
 async function dlOne(name){
   try{
-    const r=await fetch(API+'/photos/'+name+'?pin='+PIN);
+    const r=await fetch(photoURL(name));
     const b=await r.blob();
     const a=document.createElement('a');
     a.href=URL.createObjectURL(b); a.download=name; a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href), 5000);
   }catch(e){ alert('Download failed — try again'); }
 }
-function dl(){ location.href=API+'/zip?pin='+PIN; }
+function dl(){
+  if (VIA_CDN){ location.href='gal/mia-photos.zip'; return; }   // published copies zip
+  location.href=API+'/zip?pin='+PIN;
+}
 </script>
 </body>
 </html>
